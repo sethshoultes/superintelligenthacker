@@ -3,12 +3,12 @@
   "why": "Super Intelligent Hacker checks your own website the way someone trying to get in would, then tells you in plain words how to shut each door. The check is coming; it isn't running yet.",
   "menu": [
     {
-      "label": "What I check, and what I never do",
-      "href": "/what-it-checks/"
-    },
-    {
       "label": "How it will work",
       "href": "/how-it-works/"
+    },
+    {
+      "label": "What I check, and what I never do",
+      "href": "/what-it-checks/"
     }
   ],
   "email": "hello@superintelligenthacker.com",
