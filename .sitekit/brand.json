@@ -20,7 +20,8 @@
     "on-accent": "#1B1B2F",
     "muted": "#C9C3B0",
     "heading": "#FFF8E7",
-    "shadow": "#3E7C6B"
+    "shadow": "#3E7C6B",
+    "surface": "#0F1F1C"
   },
   "bands": {
     "dark": {
@@ -49,15 +50,27 @@
       "family": "Bangers",
       "fallback": "Impact, Arial Black, sans-serif",
       "faces": [
-        {"file": "fonts/bangers.woff2", "weight": "400", "style": "normal"}
+        {
+          "file": "fonts/bangers.woff2",
+          "weight": "400",
+          "style": "normal"
+        }
       ]
     },
     "text": {
       "family": "Comic Neue",
       "fallback": "Trebuchet MS, sans-serif",
       "faces": [
-        {"file": "fonts/comic-neue-400.woff2", "weight": "400", "style": "normal"},
-        {"file": "fonts/comic-neue-700.woff2", "weight": "700", "style": "normal"}
+        {
+          "file": "fonts/comic-neue-400.woff2",
+          "weight": "400",
+          "style": "normal"
+        },
+        {
+          "file": "fonts/comic-neue-700.woff2",
+          "weight": "700",
+          "style": "normal"
+        }
       ]
     }
   },
@@ -65,6 +78,13 @@
     "style": "comic",
     "shadow": "ink",
     "tab": "shadow",
-    "page": "comic"
+    "page": "comic",
+    "family_links": "ink",
+    "cta": "compact"
+  },
+  "main": "card",
+  "body": {
+    "size": "1.125rem",
+    "measure": "70ch"
   }
 }
