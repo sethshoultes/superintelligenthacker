@@ -227,6 +227,9 @@
             "heading": "What I won't promise",
             "body": [
               {
+                "paragraph": "If I run out of requests or time, I'll list the checks I didn't get to, and I won't show an all-clear."
+              },
+              {
                 "paragraph": "A clean report doesn't mean a site is safe. It means I looked at these things, from the outside, and found nothing. Nothing I do replaces keeping your site updated, using strong sign-in, and asking someone you trust when you're unsure."
               }
             ]
@@ -459,6 +462,12 @@
                 "paragraph": "Cloudflare runs this website. Every request passes through it, so it sees your internet address and browser details."
               },
               {
+                "paragraph": "Cloudflare's 1.1.1.1 looks up the web address of each site you ask me to check, over an encrypted connection (DNS-over-HTTPS). It sees that site's name, and the names of its parent domains, because I look for an opt-out there."
+              },
+              {
+                "paragraph": "A lookup service that tells us which network a site's address belongs to, if we use one: it sees the address of the checked site, never yours."
+              },
+              {
                 "paragraph": "Key signs you in. Its own privacy page says what it keeps."
               },
               {
@@ -466,7 +475,7 @@
               },
               {
                 "subheading": "Your internet address",
-                "paragraph": "The check never stores your internet address. To stop overuse it keeps short-lived counters that reset every hour, the way Key counts blocked sign-ins."
+                "paragraph": "The check never stores your internet address. To stop overuse it keeps short-lived counters that reset every hour and are deleted within two hours, the way Key counts blocked sign-ins."
               },
               {
                 "subheading": "Cookies",
