@@ -1,0 +1,5 @@
+# Super Intelligent Hacker's site (sethshoultes/superintelligenthacker#1): a Cloudflare Pages project in Seth's personal
+# account, serving superintelligenthacker.com and www. build.sh writes dist/.
+name = "superintelligenthacker"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-11-01"
