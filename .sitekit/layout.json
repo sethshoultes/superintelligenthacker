@@ -1,0 +1,391 @@
+{
+  "template": "product",
+  "why": "Super Intelligent Hacker checks your own website the way someone trying to get in would, then tells you in plain words how to shut each door. The check is coming; it isn't running yet.",
+  "menu": [
+    {
+      "label": "What I check, and what I never do",
+      "href": "/what-it-checks/"
+    },
+    {
+      "label": "How it will work",
+      "href": "/how-it-works/"
+    }
+  ],
+  "email": "hello@superintelligentkey.com",
+  "pages": [
+    {
+      "path": "/",
+      "type": "home",
+      "title": "Super Intelligent Hacker",
+      "description": "I'm going to look at your website the way someone trying to get in would, then tell you in plain words how to shut each door.",
+      "sections": [
+        {
+          "id": "hero-home",
+          "block": "hero@1",
+          "props": {
+            "kicker": "Coming, no date yet",
+            "heading": "The hacker on your side.",
+            "lead": "I'm going to look at your website the way someone trying to get in would, then tell you in plain words how to shut each door. Only your own site. Only with your say-so.",
+            "cta": {
+              "text": "Read what I check, and what I never do",
+              "href": "/what-it-checks/"
+            }
+          }
+        },
+        {
+          "id": "yours",
+          "block": "text@1",
+          "props": {
+            "heading": "I won't touch a site that isn't yours",
+            "body": [
+              {
+                "paragraph": "A check on someone else's site is a break-in, even when it's meant kindly. So I'll only ever look at a site you've proved is yours, and I'll show the report to you and no one else. The whole list of what I check, and what I will never do, is on one page, and I wrote it first."
+              }
+            ]
+          }
+        },
+        {
+          "id": "get",
+          "block": "text@1",
+          "props": {
+            "heading": "What you'll get",
+            "body": [
+              {
+                "paragraph": "A short page, in plain words: here's the door, here's how I'd get in, here's how to shut it. The most important first. No jargon you have to look up, no pile of red marks, no pressure to buy anything."
+              },
+              {
+                "paragraph": "Coming. It isn't built yet, and I won't give you a date until it is."
+              }
+            ]
+          }
+        },
+        {
+          "id": "for",
+          "block": "text@1",
+          "props": {
+            "heading": "Who I'm for",
+            "body": [
+              {
+                "paragraph": "People who look after a small website and would like a friendly second pair of eyes: a shop, a studio, a membership site, a newsletter. If you can say \"I'd rather know,\" I'm for you."
+              }
+            ]
+          }
+        },
+        {
+          "id": "close",
+          "block": "cta@1",
+          "props": {
+            "heading": "I check the doors so you can stop wondering about them.",
+            "button": {
+              "text": "What I check, and everything I will never do",
+              "href": "/what-it-checks/"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/what-it-checks/",
+      "type": "page",
+      "title": "What I check, and what I will never do",
+      "description": "The check is coming, and I won't give you a date until it's real. This page is the promise I'm making before it exists, so you can hold me to it.",
+      "sections": [
+        {
+          "id": "hero-checks",
+          "block": "hero@1",
+          "props": {
+            "kicker": "The page that matters most",
+            "heading": "What I check, and what I will never do",
+            "lead": "The check is coming, and I won't give you a date until it's real. This page is the promise I'm making before it exists, so you can hold me to it."
+          }
+        },
+        {
+          "id": "never",
+          "block": "services@1",
+          "props": {
+            "heading": "What I will never do",
+            "items": [
+              {
+                "name": "1. I only look at a site you've proved is yours.",
+                "text": "To start a check you show you control the site: you add a line of text to your domain's settings, or a tag to a page, or a small file, and you're signed in with Key. A web address someone types in is never enough. Not mine, not a friend's, not a competitor's."
+              },
+              {
+                "name": "2. I only do safe, quiet things.",
+                "text": "I read what any visitor could read. I don't try passwords. I don't guess at a login. I don't fire anything at your site to see if it breaks."
+              },
+              {
+                "name": "3. I go slowly.",
+                "text": "A few requests at a time, with a gap between them, so your site never feels it. If it's slow or struggling, I stop."
+              },
+              {
+                "name": "4. I say who I am.",
+                "text": "Every request carries a name that says it's the Super Intelligent Hacker, so your host or your logs can see it's me, and so you can block me whenever you like."
+              },
+              {
+                "name": "5. The report is yours alone.",
+                "text": "Only the owner who proved the site can open it. I don't share it, I don't sell it, I don't show it to anyone else."
+              },
+              {
+                "name": "6. I never keep your keys.",
+                "text": "If I find a secret key sitting in a public page, I'll tell you where, and show only the first few characters, like \"a key starting sk_ is public on this page.\" I never store the whole thing and never show it in full."
+              },
+              {
+                "name": "7. I don't use fear.",
+                "text": "No red alarm, no \"you've been hacked\", no countdown, no pushing you to buy anything. Just the door and how to shut it."
+              }
+            ]
+          }
+        },
+        {
+          "id": "planned",
+          "block": "text@1",
+          "props": {
+            "heading": "What I'm planning to check (coming)",
+            "body": [
+              {
+                "paragraph": "These are what the first check will look at, and only from the outside, only the quiet way. None of it is running yet."
+              }
+            ]
+          }
+        },
+        {
+          "id": "planned-list",
+          "block": "list@1",
+          "props": {
+            "points": [
+              {
+                "point": "That your site uses a proper secure connection (the padlock), and that it's set up well."
+              },
+              {
+                "point": "The standard safety settings your site tells a browser to use."
+              },
+              {
+                "point": "Files that should never be public: a settings file, a backup, a copy of your site's code."
+              },
+              {
+                "point": "Whether the version of WordPress or a plugin your site shows publicly has a known problem."
+              },
+              {
+                "point": "A secret key left in a page's public code."
+              },
+              {
+                "point": "The basics of your login page."
+              }
+            ]
+          }
+        },
+        {
+          "id": "each",
+          "block": "text@1",
+          "props": {
+            "body": [
+              {
+                "subheading": "For each thing I find",
+                "paragraph": "I'll tell you, in plain words: here's the door, here's how I'd get in, and here's how to shut it. The most important first."
+              }
+            ]
+          }
+        },
+        {
+          "id": "promise",
+          "block": "text@1",
+          "props": {
+            "heading": "What I won't promise",
+            "body": [
+              {
+                "paragraph": "A clean report doesn't mean a site is safe. It means I looked at these things, from the outside, and found nothing. Nothing I do replaces keeping your site updated, using strong sign-in, and asking someone you trust when you're unsure."
+              }
+            ]
+          }
+        },
+        {
+          "id": "tell-me",
+          "block": "text@1",
+          "props": {
+            "body": [
+              {
+                "paragraph": "If a rule above isn't one you'd want from someone checking your site, tell me and I'll change it before I build anything."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "path": "/how-it-works/",
+      "type": "page",
+      "title": "How it will work",
+      "description": "This is the plan, in the order it will happen. The check isn't built yet, so none of this is running today.",
+      "sections": [
+        {
+          "id": "hero-how",
+          "block": "hero@1",
+          "props": {
+            "heading": "How it will work",
+            "lead": "This is the plan, in the order it will happen. The check isn't built yet, so none of this is running today."
+          }
+        },
+        {
+          "id": "steps",
+          "block": "text@1",
+          "props": {
+            "body": [
+              {
+                "subheading": "1. You show the site is yours.",
+                "paragraph": "You'll add a line of text to your domain's settings, a tag to a page, or a small file, the way Google's Search Console asks you to. You'll sign in with Key first, so the check is tied to you. I won't run on a web address someone just types in."
+              },
+              {
+                "subheading": "2. I look from the outside, gently.",
+                "paragraph": "I read what any visitor could read. I won't guess passwords, and I won't try to break anything. I go slowly, and I say who I am when I knock."
+              },
+              {
+                "subheading": "3. You get a short report, just for you.",
+                "paragraph": "It lists what I found, the most important first, and how to shut each door in plain words. Nobody else sees it."
+              },
+              {
+                "subheading": "4. Then it's your call.",
+                "paragraph": "Fix it yourself, or hand it to Foo. Key can help with the sign-in, and Memory can keep a note of what you changed and why."
+              }
+            ]
+          }
+        },
+        {
+          "id": "when",
+          "block": "text@1",
+          "props": {
+            "body": [
+              {
+                "paragraph": "Coming. No date yet. Until then, the page that matters most is what I check and what I never do."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "path": "/terms/",
+      "type": "page",
+      "title": "Terms",
+      "menu": "footer",
+      "description": "These are the rules for using Super Intelligent Hacker.",
+      "sections": [
+        {
+          "id": "hero-terms",
+          "block": "hero@1",
+          "props": {
+            "heading": "Terms",
+            "lead": "These are the rules for using Super Intelligent Hacker. By creating an account or using the check you agree to them. If you don't, please don't use it. Questions: hello@superintelligentkey.com."
+          }
+        },
+        {
+          "id": "terms",
+          "block": "text@1",
+          "props": {
+            "body": [
+              {
+                "subheading": "What Super Intelligent Hacker is",
+                "paragraph": "Super Intelligent Hacker checks your own website the way someone trying to get in would, then tells you in plain words how to shut each door. It's run by Seth Shoultes in the United States. How it handles information is on the privacy page. The check is coming; it isn't running yet."
+              },
+              {
+                "subheading": "Your account",
+                "paragraph": "You must be at least 13, and old enough to agree to these terms where you live. Use a real email address and keep your sign-in safe. Only ask for a check of a site you own or have the right to change. You'll prove you control it before anything is checked."
+              },
+              {
+                "subheading": "What I do and don't do",
+                "paragraph": "What the check looks at, and what it will never do, is on the page What I check, and what I never do. That page is part of these terms."
+              },
+              {
+                "subheading": "What you may not do",
+                "paragraph": "Break the law, or use the check to harm, harass or mislead people. Try to get into accounts, sites or systems that aren't yours, or to overload or break the service. Copy, resell or reverse-engineer it, except where the law lets you. If you do, we may stop your access."
+              },
+              {
+                "subheading": "Other companies",
+                "paragraph": "The check works with other companies, such as Cloudflare, Resend and the sign-in providers. Their services come with their own terms. The ones that handle your information are on the privacy page."
+              },
+              {
+                "subheading": "Ending things",
+                "paragraph": "You can stop using the check at any time and delete your reports. To have your account deleted, email hello@superintelligentkey.com. We may suspend or end an account that breaks these terms, or if we have to stop running the check, and we'll give notice where we can."
+              },
+              {
+                "subheading": "What we don't promise",
+                "paragraph": "The check is provided as it is. We work hard to keep it running and correct, but we don't promise it will always be available, error-free or fit for a particular purpose. A clean report isn't a promise that your site is safe: it shows what was found, from the outside, at one moment. To the most the law allows, we're not liable for lost profits, lost data or indirect damage, and our total liability for anything arising from the check is limited to what you paid us in the 12 months before the problem. Nothing here limits a right you have by law that can't be limited."
+              },
+              {
+                "subheading": "Changes and law",
+                "paragraph": "We may change these terms. When we do, we change this page and the date at the top, and by using the check after that you accept the new terms. These terms are governed by the laws of the State of Utah, United States, and a dispute is for the courts of that state."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "path": "/privacy/",
+      "type": "page",
+      "title": "Privacy",
+      "menu": "footer",
+      "description": "This page says what Super Intelligent Hacker keeps about you and your reports, which companies help us run it, and how to have it deleted.",
+      "sections": [
+        {
+          "id": "hero-privacy",
+          "block": "hero@1",
+          "props": {
+            "heading": "Privacy",
+            "lead": "This page says what Super Intelligent Hacker keeps about you and your reports, which companies help us run it, and how to have it deleted. It covers this website and the check."
+          }
+        },
+        {
+          "id": "privacy",
+          "block": "text@1",
+          "props": {
+            "body": [
+              {
+                "paragraph": "The check is coming; this page says what we've decided before it runs."
+              },
+              {
+                "paragraph": "Super Intelligent Hacker is run by Seth Shoultes in the United States. We don't sell your information, and we don't use it to show you ads. Questions about any of this: hello@superintelligentkey.com."
+              },
+              {
+                "subheading": "What we keep",
+                "paragraph": "Your account: your email address, through Key's sign-in. The site you've proved is yours, and the record that you proved it. That record is kept while the site stays verified, and deleted 30 days after you remove it or the proof stops working. Your reports: only you can open them. A key found in a public page is reported as the first few characters and where it was, and the whole key is never stored or shown in full."
+              },
+              {
+                "subheading": "Companies that help us run it",
+                "paragraph": "Cloudflare runs this website. Every request passes through it, so it sees your internet address and browser details."
+              },
+              {
+                "paragraph": "Key signs you in. Its own privacy page says what it keeps."
+              },
+              {
+                "paragraph": "Resend sends the sign-in emails, through Key. It receives your email address and the sign-in link or code."
+              },
+              {
+                "subheading": "Your internet address",
+                "paragraph": "The check never stores your internet address. To stop overuse it keeps short-lived counters that reset every hour, the way Key counts blocked sign-ins."
+              },
+              {
+                "subheading": "Cookies",
+                "paragraph": "This website sets none."
+              },
+              {
+                "subheading": "Children",
+                "paragraph": "The check is for people who run websites. It isn't meant for anyone under 13."
+              },
+              {
+                "subheading": "How long we keep it",
+                "paragraph": "A report is kept for 30 days, then deleted. You can delete a report yourself at any time."
+              },
+              {
+                "subheading": "Deleting it",
+                "paragraph": "You can delete a report any time, and it's gone. To have your whole account deleted, or to ask for a copy of what we hold about you, email hello@superintelligentkey.com from that account's address. We reply and act within 30 days."
+              },
+              {
+                "paragraph": "Companies in the list above keep their own records under their own privacy terms. Deleting your account with us does not reach into theirs, so ask them too if you want that."
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
