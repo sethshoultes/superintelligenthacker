@@ -11,13 +11,40 @@
       "href": "/how-it-works/"
     }
   ],
-  "email": "hello@superintelligentkey.com",
+  "email": "hello@superintelligenthacker.com",
+  "footer": {
+    "columns": [
+      {
+        "heading": "Super Intelligent Hacker",
+        "links": [
+          {
+            "label": "Terms of use",
+            "href": "/terms/"
+          },
+          {
+            "label": "Privacy",
+            "href": "/privacy/"
+          },
+          {
+            "label": "Pricing",
+            "href": "/pricing/"
+          },
+          {
+            "label": "Who is this?",
+            "href": "/bot/"
+          }
+        ]
+      }
+    ],
+    "layout": "row",
+    "note": "The family: Key, Foo and Memory."
+  },
   "pages": [
     {
       "path": "/",
       "type": "home",
       "title": "Super Intelligent Hacker",
-      "description": "I'm going to look at your website the way someone trying to get in would, then tell you in plain words how to shut each door.",
+      "description": "A check of your own website, the way someone trying to get in would look at it. Then plain words on how to shut each door. Only your site, only with your say-so.",
       "sections": [
         {
           "id": "hero-home",
@@ -25,9 +52,9 @@
           "props": {
             "kicker": "Coming, no date yet",
             "heading": "The hacker on your side.",
-            "lead": "I'm going to look at your website the way someone trying to get in would, then tell you in plain words how to shut each door. Only your own site. Only with your say-so.",
+            "lead": "A check of your own website, the way someone trying to get in would look at it. Then plain words on how to shut each door. Only your site, only with your say-so.",
             "cta": {
-              "text": "Read what I check, and what I never do",
+              "text": "What I check, and what I never do",
               "href": "/what-it-checks/"
             }
           }
@@ -39,7 +66,7 @@
             "heading": "I won't touch a site that isn't yours",
             "body": [
               {
-                "paragraph": "A check on someone else's site is a break-in, even when it's meant kindly. So I'll only ever look at a site you've proved is yours, and I'll show the report to you and no one else. The whole list of what I check, and what I will never do, is on one page, and I wrote it first."
+                "paragraph": "A check on someone else's site is not okay, even when it's meant kindly. So I'll only ever look at a site you've proved is yours, and I'll show the report to you and no one else."
               }
             ]
           }
@@ -77,8 +104,8 @@
           "props": {
             "heading": "I check the doors so you can stop wondering about them.",
             "button": {
-              "text": "What I check, and everything I will never do",
-              "href": "/what-it-checks/"
+              "text": "How it will work",
+              "href": "/how-it-works/"
             }
           }
         }
@@ -88,7 +115,7 @@
       "path": "/what-it-checks/",
       "type": "page",
       "title": "What I check, and what I will never do",
-      "description": "The check is coming, and I won't give you a date until it's real. This page is the promise I'm making before it exists, so you can hold me to it.",
+      "description": "The check is coming. I won't give you a date until it's real. This is the promise I'm making before it exists, so you can hold me to it.",
       "sections": [
         {
           "id": "hero-checks",
@@ -96,42 +123,45 @@
           "props": {
             "kicker": "The page that matters most",
             "heading": "What I check, and what I will never do",
-            "lead": "The check is coming, and I won't give you a date until it's real. This page is the promise I'm making before it exists, so you can hold me to it."
+            "lead": "The check is coming. I won't give you a date until it's real. This is the promise I'm making before it exists, so you can hold me to it."
           }
         },
         {
           "id": "never",
-          "block": "services@1",
+          "block": "text@1",
           "props": {
             "heading": "What I will never do",
-            "items": [
+            "body": [
               {
-                "name": "1. I only look at a site you've proved is yours.",
-                "text": "To start a check you show you control the site: you add a line of text to your domain's settings, or a tag to a page, or a small file, and you're signed in with Key. A web address someone types in is never enough. Not mine, not a friend's, not a competitor's."
+                "subheading": "1. I only come in when you open the door.",
+                "paragraph": "First you prove the site is yours. Put a small file on your website, or add one line to your home page, the way Google asks. I give you the exact words, and I look for them on your site itself, at the start and again at the end. You sign in with Key first. A web address someone just types in is never enough: not mine, not a friend's, not a competitor's."
               },
               {
-                "name": "2. I only do safe, quiet things.",
-                "text": "I read what any visitor could read. I don't try passwords. I don't guess at a login. I don't fire anything at your site to see if it breaks."
+                "subheading": "2. I only do safe, quiet things.",
+                "paragraph": "I read what any visitor could read. I don't try passwords, guess at your login, or fire anything at your site to see if it breaks."
               },
               {
-                "name": "3. I go slowly.",
-                "text": "A few requests at a time, with a gap between them, so your site never feels it. If it's slow or struggling, I stop."
+                "paragraph": "I read your robots.txt (the note that tells search engines to keep out), but I don't treat it as a stop sign, because you asked me to look."
               },
               {
-                "name": "4. I say who I am.",
-                "text": "Every request carries a name that says it's the Super Intelligent Hacker, so your host or your logs can see it's me, and so you can block me whenever you like."
+                "subheading": "3. I go slowly.",
+                "paragraph": "One request at a time, about one a second. A check stops at 80 requests or five minutes, whichever comes first. Your site won't feel it."
               },
               {
-                "name": "5. The report is yours alone.",
-                "text": "Only the owner who proved the site can open it. I don't share it, I don't sell it, I don't show it to anyone else."
+                "subheading": "4. I say who I am.",
+                "paragraph": "Every request carries a name that says it's the Super Intelligent Hacker, so your web host can see it's me. You can tell me to stay away by adding one line to a file on your site."
               },
               {
-                "name": "6. I never keep your keys.",
-                "text": "If I find a secret key sitting in a public page, I'll tell you where, and show only the first few characters, like \"a key starting sk_ is public on this page.\" I never store the whole thing and never show it in full."
+                "subheading": "5. The report is yours alone.",
+                "paragraph": "Only the owner who proved the site can open it. I don't share it, I don't sell it, I don't show it to anyone else."
               },
               {
-                "name": "7. I don't use fear.",
-                "text": "No red alarm, no \"you've been hacked\", no countdown, no pushing you to buy anything. Just the door and how to shut it."
+                "subheading": "6. I never keep your passwords or keys.",
+                "paragraph": "A secret key is a password-like code that lets one service talk to another. If I find one sitting in a public page, I'll tell you where, and show only how it begins (like \"sk_\") and how long it is. I never store the rest."
+              },
+              {
+                "subheading": "7. I don't use fear.",
+                "paragraph": "No red alarm, no \"you've been hacked\", no countdown, no pushing you to buy anything. Just the door and how to shut it."
               }
             ]
           }
@@ -143,7 +173,7 @@
             "heading": "What I'm planning to check (coming)",
             "body": [
               {
-                "paragraph": "These are what the first check will look at, and only from the outside, only the quiet way. None of it is running yet."
+                "paragraph": "The first check will look at these, only from the outside and only the quiet way. None of it is running yet."
               }
             ]
           }
@@ -154,22 +184,22 @@
           "props": {
             "points": [
               {
-                "point": "That your site uses a proper secure connection (the padlock), and that it's set up well."
+                "point": "Your site's padlock (its secure connection): that it's there and set up well."
               },
               {
-                "point": "The standard safety settings your site tells a browser to use."
+                "point": "The safety settings your site tells browsers to use."
               },
               {
-                "point": "Files that should never be public: a settings file, a backup, a copy of your site's code."
+                "point": "Files that should never be public, like a backup or a settings file."
               },
               {
-                "point": "Whether the version of WordPress or a plugin your site shows publicly has a known problem."
+                "point": "Which WordPress and plugin versions your site shows to anyone who looks."
               },
               {
                 "point": "A secret key left in a page's public code."
               },
               {
-                "point": "The basics of your login page."
+                "point": "Your login page: whether anything obvious is wrong."
               }
             ]
           }
@@ -181,7 +211,7 @@
             "body": [
               {
                 "subheading": "For each thing I find",
-                "paragraph": "I'll tell you, in plain words: here's the door, here's how I'd get in, and here's how to shut it. The most important first."
+                "paragraph": "I'll say, in plain words: here's the door, here's how I'd get in, and here's how to shut it. The most important first."
               }
             ]
           }
@@ -204,7 +234,10 @@
           "props": {
             "body": [
               {
-                "paragraph": "If a rule above isn't one you'd want from someone checking your site, tell me and I'll change it before I build anything."
+                "paragraph": "If a rule above isn't one you'd want from someone checking your site, tell me and I'll change it before I build anything. You can write to hello@superintelligenthacker.com."
+              },
+              {
+                "paragraph": "To tell me to stay away, or to report something I did, write to security@superintelligenthacker.com."
               }
             ]
           }
@@ -232,7 +265,7 @@
             "body": [
               {
                 "subheading": "1. You show the site is yours.",
-                "paragraph": "You'll add a line of text to your domain's settings, a tag to a page, or a small file, the way Google's Search Console asks you to. You'll sign in with Key first, so the check is tied to you. I won't run on a web address someone just types in."
+                "paragraph": "You put a small file on your website, or add one line to your home page, the way Google asks you to. I give you the exact words. You sign in with Key first. A web address someone just types in is never enough."
               },
               {
                 "subheading": "2. I look from the outside, gently.",
@@ -244,7 +277,7 @@
               },
               {
                 "subheading": "4. Then it's your call.",
-                "paragraph": "Fix it yourself, or hand it to Foo. Key can help with the sign-in, and Memory can keep a note of what you changed and why."
+                "paragraph": "Fix it yourself, or ask whoever looks after your site. Foo can change your pages if that's the fix. Memory can keep a note if you ask it to."
               }
             ]
           }
@@ -255,7 +288,75 @@
           "props": {
             "body": [
               {
-                "paragraph": "Coming. No date yet. Until then, the page that matters most is what I check and what I never do."
+                "paragraph": "Coming. No date yet. Until then, the page that matters most is what I check, and what I never do."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "path": "/pricing/",
+      "type": "page",
+      "title": "Not sold yet",
+      "menu": "footer",
+      "description": "There's nothing to buy here today, and there is no price.",
+      "sections": [
+        {
+          "id": "hero-pricing",
+          "block": "hero@1",
+          "props": {
+            "heading": "Not sold yet",
+            "lead": "There's nothing to buy here today, and there is no price. The check isn't built yet, so there is no plan, no trial and no card to enter."
+          }
+        },
+        {
+          "id": "for-now",
+          "block": "text@1",
+          "props": {
+            "body": [
+              {
+                "paragraph": "If that ever changes, this page will say so before anything is sold. For now, the page that matters is what I check, and what I never do."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "path": "/bot/",
+      "type": "page",
+      "title": "Who is this?",
+      "menu": "footer",
+      "description": "I'm the Super Intelligent Hacker. If you found my name in your site's visitor records, here is what that means.",
+      "sections": [
+        {
+          "id": "hero-bot",
+          "block": "hero@1",
+          "props": {
+            "heading": "Who is this?",
+            "lead": "I'm the Super Intelligent Hacker. If you found my name in your site's visitor records, here is what that means."
+          }
+        },
+        {
+          "id": "bot",
+          "block": "text@1",
+          "props": {
+            "body": [
+              {
+                "paragraph": "I only visit a site when its owner has asked me to check it, and has proved the site is theirs. I read what any visitor could read, one request at a time, and I never try passwords or break anything. The full list is on what I check, and what I never do."
+              },
+              {
+                "subheading": "I'm not running yet.",
+                "paragraph": "The check is coming, with no date. If you see this name before then, it is not me."
+              },
+              {
+                "subheading": "If you did not expect me,",
+                "paragraph": "write to security@superintelligenthacker.com and I will look into it."
+              },
+              {
+                "subheading": "To keep me away from your site,",
+                "paragraph": "add one line to a file on it, /.well-known/superintelligenthacker.txt."
               }
             ]
           }
@@ -274,7 +375,7 @@
           "block": "hero@1",
           "props": {
             "heading": "Terms",
-            "lead": "These are the rules for using Super Intelligent Hacker. By creating an account or using the check you agree to them. If you don't, please don't use it. Questions: hello@superintelligentkey.com."
+            "lead": "These are the rules for using Super Intelligent Hacker. By creating an account or using the check you agree to them. If you don't, please don't use it. Questions: hello@superintelligenthacker.com."
           }
         },
         {
@@ -304,7 +405,7 @@
               },
               {
                 "subheading": "Ending things",
-                "paragraph": "You can stop using the check at any time and delete your reports. To have your account deleted, email hello@superintelligentkey.com. We may suspend or end an account that breaks these terms, or if we have to stop running the check, and we'll give notice where we can."
+                "paragraph": "You can stop using the check at any time and delete your reports. To have your account deleted, email hello@superintelligenthacker.com. We may suspend or end an account that breaks these terms, or if we have to stop running the check, and we'll give notice where we can."
               },
               {
                 "subheading": "What we don't promise",
@@ -343,11 +444,11 @@
                 "paragraph": "The check is coming; this page says what we've decided before it runs."
               },
               {
-                "paragraph": "Super Intelligent Hacker is run by Seth Shoultes in the United States. We don't sell your information, and we don't use it to show you ads. Questions about any of this: hello@superintelligentkey.com."
+                "paragraph": "Super Intelligent Hacker is run by Seth Shoultes in the United States. We don't sell your information, and we don't use it to show you ads. Questions about any of this: hello@superintelligenthacker.com."
               },
               {
                 "subheading": "What we keep",
-                "paragraph": "Your account: your email address, through Key's sign-in. The site you've proved is yours, and the record that you proved it. That record is kept while the site stays verified, and deleted 30 days after you remove it or the proof stops working. Your reports: only you can open them. A key found in a public page is reported as the first few characters and where it was, and the whole key is never stored or shown in full."
+                "paragraph": "Your account: your email address, through Key's sign-in. The site you've proved is yours, and the record that you proved it. That record is kept while the site stays verified, and deleted 30 days after you remove it or the proof stops working. Your reports: only you can open them. A key found in a public page is reported as its fixed beginning (like \"sk_live_\"), its length and where it was. Nothing after that beginning is ever stored or shown."
               },
               {
                 "subheading": "Companies that help us run it",
@@ -376,8 +477,11 @@
                 "paragraph": "A report is kept for 30 days, then deleted. You can delete a report yourself at any time."
               },
               {
+                "paragraph": "Logs of the requests a check makes (which pages, never their content) age out in 30 days."
+              },
+              {
                 "subheading": "Deleting it",
-                "paragraph": "You can delete a report any time, and it's gone. To have your whole account deleted, or to ask for a copy of what we hold about you, email hello@superintelligentkey.com from that account's address. We reply and act within 30 days."
+                "paragraph": "You can delete a report any time, and it's gone. To have your whole account deleted, or to ask for a copy of what we hold about you, email hello@superintelligenthacker.com from that account's address. We reply and act within 30 days."
               },
               {
                 "paragraph": "Companies in the list above keep their own records under their own privacy terms. Deleting your account with us does not reach into theirs, so ask them too if you want that."
