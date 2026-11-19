@@ -85,6 +85,6 @@
   "main": "card",
   "body": {
     "size": "1.125rem",
-    "measure": "70ch"
+    "measure": "50ch"
   }
 }
