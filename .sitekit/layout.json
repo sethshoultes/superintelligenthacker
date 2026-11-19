@@ -41,7 +41,7 @@
       }
     ],
     "layout": "row",
-    "note": "The family: Key, Foo and Memory."
+    "note": "The family: Key, Foo and Memory. Questions: hello@superintelligenthacker.com. To tell me to stay away or to report something I did: security@superintelligenthacker.com."
   },
   "pages": [
     {
@@ -363,7 +363,7 @@
               },
               {
                 "subheading": "To keep me away from your site,",
-                "paragraph": "add one line to a file on it, /.well-known/superintelligenthacker.txt."
+                "paragraph": "add the line \"deny\" to a file at /.well-known/superintelligenthacker.txt on that site."
               }
             ]
           }
