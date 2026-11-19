@@ -1,6 +1,6 @@
 # superintelligenthacker
 
-Super Intelligent Hacker is the hacker on your side. It will look at your own website the way someone trying to get in would, then tell you in plain words how to shut each door: only your own site, and only with your say-so. The check is coming; it isn't running yet. This repo is its site, superintelligenthacker.com, in the Key, Foo and Memory family.
+Super Intelligent Hacker is the hacker on your side: a check of your own website, the way someone trying to get in would look at it, then plain words on how to shut each door. Only your site, only with your say-so. The check is coming; it isn't running yet. This repo is its site, superintelligenthacker.com, in the Key, Foo and Memory family.
 
 - **Edit:** `.sitekit/layout.json` (the pages) and `.sitekit/brand.json` (the brand). `brand/` comes from `brand/mark.html` and `brand/share.html`: `scripts/make-brand.sh` makes the icons and the share image.
 - **Build:** `./build.sh` writes `dist/`.
