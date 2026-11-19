@@ -107,7 +107,7 @@ def build(record, brand_rec, origin, out, root=".", publish=False, assets=None, 
         ld += doclib.head(library, p["path"])
         doc = render.document(record, p["path"], brand_rec, origin, blocks, types, css="/" + CSS, head_extra=ld, header_size=size, family=fam,
                               image=blog.image(posts, p["path"]))
-        docs[p["path"]] = blog.place(doc, added[p["path"]], doc.index("\n</main>")) if p["path"] in added else doc
+        docs[p["path"]] = hero_sizes(blog.place(doc, added[p["path"]], doc.index("\n</main>")) if p["path"] in added else doc, pictures, p["path"])
     docs, slot_files = fill_slots(record, blocks, docs, root if plugins_root is None else plugins_root)   # checked, and every plugin run, before anything is written
     docs, page_files = with_page_plugins(docs, root if plugins_root is None else plugins_root, posts["posts"])
     slot_files.update(page_files)
@@ -481,6 +481,22 @@ def font_files(brand_rec, root):
             raise layout.LayoutError(f"font file {rel!r} is not a {pathlib.PurePosixPath(name).suffix[1:]} font")
         out.append((src, name))
     return out
+
+
+HERO_IMG = re.compile(r'<img src="((?:/img/hero/|/docs-img/)[^"<>]+)" alt="')   # hero art (site-kit#519) and docs figures (#516)
+
+
+def hero_sizes(html, pictures, path):
+    """Hero art (site-kit#519, under /img/hero/) carries its own width and height, read from the file, so the hero never
+    shifts the page as it loads. Only that path, so every other image is written as before."""
+    by_path = {"/" + name: src for src, name in pictures.items()}
+
+    def sized(m):
+        size = image_size(by_path.get(m.group(1)))
+        if size is None:
+            raise layout.LayoutError(f"page {path}: hero art {m.group(1)} must be a PNG, JPEG or WebP in --assets, so its size can go on the page")
+        return f'<img src="{m.group(1)}" width="{size[0]}" height="{size[1]}" alt="'
+    return HERO_IMG.sub(sized, html)
 
 
 def image_size(src):

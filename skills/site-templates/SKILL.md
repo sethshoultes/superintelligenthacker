@@ -176,8 +176,20 @@ python3 skills/site-templates/serialize.py .sitekit/layout.json / --html   # sta
       - the header's menu items are pills on the ground (a 3px `ink` border, 10px corners, a `3px 3px 0` shadow), the last one the pow button, and theme-picker's menu the same pill;
       - the footer is Foo's: on the page's own ground (leave `footer.band` unset), left-aligned, the family line, then the note, then the links, with no second site title.
     - `"tab"` (optional, a colour role): the middle card's title strip. It defaults to the shadow's role, so a brand can keep a colour as an accent while its shadows are `ink`.
+    - **site-kit#519, `hero@1.6`, every family page opens with a hero that explains it:** two optional props.
+      - `caption` (up to 120): the art's own `<figcaption>`, a box on its lower edge in ink on the ground (under the art on a phone).
+      - `strip` (2 or 3 items, each `{"image"}` with alt): small panels in one row under the art, on a phone too.
+      - Art under `/img/hero/` (`/img/hero/<page-slug>.webp`, 1600x900 WebP) gets its width and height from the file, and on a
+        phone it's capped at 40vh, so body text starts above the fold. Other images are written as before.
+      - Items props now take `min` as well as `max`. A 1.5 record builds byte for byte.
+      - The check: `scripts/site_check.py`'s `hero_every_page`, opt-in in `.sitekit/features.json` with the built folder
+        (`"hero_every_page": "dist"`). Each built page must open with a `section.hero` whose art has alt, width and height,
+        and a caption of at most 120 characters. `404.html` and noindex pages are exempt. Foo's builder writes the same markup.
     - `"hero": "scene"`: the hero as Foo's bordered scene panel, its copy in white over the art, with `hero@1.5`'s optional `kicker` (up to 60 characters, a paragraph right before the h1) as a tilted tag. The backdrop and the character come from the plugins Foo uses: time-of-day on `#<hero id>` and hero-character (figure and speech bubble). Leave the hero's `image` unset when hero-character supplies the figure.
     - Without them, comic panels write exactly the rules they did. Static-only, like the rest of `panels`.
+  - **site-kit#517, reading (Seth on Key's pages):** opt-in keys for running text. A brand without them builds as before.
+    - `body: {"size": "1rem" to "1.5rem", "measure": "45ch" to "90ch"}`, each optional. `size` sets the body text (the stylesheet's own is 1.0625rem). `measure` caps every paragraph and list item in `main` at that many characters, centred when `text_align` is `"center"`.
+    - Two more `panels` fields, only with `"page": "comic"`: `"family_links": "ink"` gives the footer's family line Foo's footer-link look (`ink`, accent underline), so a light look's accent never carries the words; `"cta": "compact"` sizes the closing band to its button (`clamp(20px, 3vw, 32px)` above and below, not up to 80px), its heading balanced and 1.45rem on phones so a word like "sign-in" doesn't split at its hyphen.
     - **Page plugins:** a site-templates build now runs any plugin its `.sitekit/plugins.json` names that fills `head.styles` or filters `page.html` and has no edge code (time-of-day, hero-character), through the site's synced `theme.py`: its styles go in every page's head, every page goes through its filter, and its assets are copied. The edge build leaves those settings to this step and still refuses a slot plugin's. A site that names none builds as before. Page plugins run before the brand's looks, so a look swaps an image a page plugin places (hero-character's `variant_slot`).
 - **The page itself:** the `header` and `footer` template parts around the page's sections. The site title, logo and menu come from the brand record and the pages, and the current page is marked `aria-current`.
 
@@ -376,9 +388,13 @@ repo. Key is first (`docs/help` in sethshoultes/doorman); any product uses it by
   file that differs from the lock, or one the lock doesn't list: docs change in the product's repo, then sync again.
 - **Each doc:** front matter `title`, `shelf` (a configured key), `hint` (up to 140 characters, the page's description),
   `covers` (a feature in the product's `features.json`, so a renamed or removed feature fails the build), `screens` (the
-  app's own, ignored here) and `updated`. Each key once.
+  app's own, ignored here) and `updated`. Each key once. Optional (site-kit#516, #519): `hero_image` (exactly
+  `/img/hero/docs-<slug>.webp`) with `hero_alt` (up to 160) and `hero_caption` (up to 120). The page then opens with the kit's own
+  `hero` block (the doc's title and hint over the art), so it passes `hero_every_page` like any page.
 - **Markdown, escaped:** `##`/`###` headings, paragraphs, `-` and `1.` lists, `**strong**`, `*em*`, `` `code` `` and
   links. Every other character is text, raw HTML included. A link must be http, https, mailto or this site's own path.
+  A line that is only `![alt](/docs-img/<name>.webp "caption")` is a figure (site-kit#516): alt required (up to 160), the
+  caption optional (up to 120), WebP under `/docs-img/` only, its width and height read from the file in `--assets`.
 - **Pages:** `/docs/` (the record's own page if it has one, else one titled by the config) lists every doc by shelf, with a
   search form hidden until `/docs/search.js` runs (same origin, no third party, no cookies). `/docs/<slug>/` is one doc,
   with the feature it covers and its date, and `/docs/<slug>.md` is its twin. `/docs/index.json` (slug, title, shelf, hint,

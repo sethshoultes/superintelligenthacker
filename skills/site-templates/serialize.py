@@ -128,8 +128,9 @@ def _node(node, props, item, anchor=None, kind=None):
         text = f("text")
         return _wrap("list-item", f"<li>{escape(text)}</li>") if text.strip() else ""
     if part == "image":
-        src, alt = f("src"), f("alt")
-        return _wrap("image", f'<figure class="wp-block-image"><img src="{escape(_safe("src", src))}" alt="{escape(alt)}"/></figure>') if src else ""
+        src, alt, caption = f("src"), f("alt"), (f("caption") if "caption" in node else "")
+        cap = f'<figcaption class="wp-element-caption">{escape(caption)}</figcaption>' if caption.strip() else ""   # site-kit#519
+        return _wrap("image", f'<figure class="wp-block-image"><img src="{escape(_safe("src", src))}" alt="{escape(alt)}"/>{cap}</figure>') if src else ""
     if part == "button":
         text, href = f("text"), f("href")
         if not (text.strip() and href):

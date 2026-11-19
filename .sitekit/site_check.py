@@ -22,7 +22,7 @@ the owner's approval binding.
 .sitekit/features.json (in the site repo; every key but site_only, post_images and memory_lines is required):
   { "site": "smores", "soul": "SOUL.md", "style_guide": "canon/STYLEGUIDE.md", "plugins_dir": "plugins",
     "functions_dirs": ["functions"], "page_types_file": "data/types.json" | null, "post_images": true | false,
-    "memory_lines": true | false,
+    "memory_lines": true | false, "hero_every_page": "dist" (optional: the built folder; every page there opens with a hero, site-kit#519),
     "site_only": [ {"kind": "plugin|function|page_type", "name": "...", "proposal": "site-kit#N|existing", "why": "..."} ] }
 
 Featured images (site-kit#214, Seth: "posts always need a featured image unless the site has them turned off"): a site with a
@@ -31,6 +31,7 @@ blog (data/blog.json) fails when a post in it has no "image" and "image_alt", un
 Memory lines (site-kit#255): the vendored site-memory workflow adds one line to .agent/memory/ after each merged pull request,
 unless "memory_lines" is false (a busy repo whose open pull requests must stay up to date with main)."""
 import hashlib
+import html.parser
 import json
 import os
 import pathlib
@@ -114,6 +115,9 @@ def _features(root):
         bad.append('.sitekit/features.json "family" must be true or false (true: a family site with its own builder, site-kit#428)')
     if "memory_lines" in f and not isinstance(f["memory_lines"], bool):
         bad.append('.sitekit/features.json "memory_lines" must be true or false (false turns merged-PR memory lines off for this site)')
+    if "hero_every_page" in f and not (isinstance(f["hero_every_page"], str) and f["hero_every_page"] and not f["hero_every_page"].startswith(("/", ".."))
+                                       and ".." not in pathlib.PurePosixPath(f["hero_every_page"]).parts):
+        bad.append('.sitekit/features.json "hero_every_page" must be the built folder, relative to the site, like "dist" (site-kit#519)')
     if "page_types_file" in f and not (f["page_types_file"] is None or (isinstance(f["page_types_file"], str) and f["page_types_file"])):
         bad.append('.sitekit/features.json "page_types_file" must be a path, or null for a site with none')
     entries = f.get("site_only", [])
@@ -152,6 +156,80 @@ def _post_images(root, f):
             '(site-kit#214); a site without post images sets "post_images": false in .sitekit/features.json'
             for p in posts if not (isinstance(p, dict) and isinstance(p.get("image"), str) and p["image"].strip()
                                    and isinstance(p.get("image_alt"), str) and p["image_alt"].strip())]
+
+
+class _HeroScan(html.parser.HTMLParser):
+    """What hero_every_page reads of one built page: main's first element, the hero's first img, its figcaption's text, and a
+    robots noindex meta."""
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.depth, self.main_at, self.first, self.hero_at, self.img, self.cap, self.in_cap, self.noindex = 0, None, None, None, None, None, False, False
+        self.in_hero = False
+
+    def handle_starttag(self, tag, attrs):
+        a = dict(attrs)
+        if tag == "meta" and (a.get("name") or "").lower() == "robots" and "noindex" in (a.get("content") or "").lower():
+            self.noindex = True
+        if tag in ("img", "meta", "link", "br", "hr", "input", "source"):   # void: no depth change
+            if tag == "img" and self.in_hero and self.img is None:
+                self.img = a
+            if self.main_at is not None and self.depth == self.main_at + 1 and self.first is None:
+                self.first = (tag, a)
+            return
+        self.depth += 1
+        if tag == "main" and self.main_at is None:
+            self.main_at = self.depth
+        elif self.main_at is not None and self.depth == self.main_at + 1 and self.first is None:
+            self.first = (tag, a)
+            if tag == "section" and "hero" in (a.get("class") or "").split():
+                self.hero_at, self.in_hero = self.depth, True
+        if tag == "figcaption" and self.in_hero and self.cap is None:
+            self.in_cap, self.cap = True, ""
+
+    def handle_endtag(self, tag):
+        if tag in ("img", "meta", "link", "br", "hr", "input", "source"):
+            return
+        if tag == "figcaption":
+            self.in_cap = False
+        if self.in_hero and self.depth == self.hero_at:
+            self.in_hero = False   # the hero is closed: nothing after it counts as its art
+        self.depth -= 1
+
+    def handle_data(self, data):
+        if self.in_cap:
+            self.cap += data
+
+
+def _heroes(root, f):
+    """site-kit#519 (Seth's standing rule): with "hero_every_page" naming the built folder, every built page opens with a hero
+    that explains it: main's first element is a section.hero holding an img with alt, width and height, and a caption, when it
+    has one, of at most 120 characters. 404.html and a noindex page (a thank-you or utility page) are exempt."""
+    built = f.get("hero_every_page")
+    if not built:
+        return []
+    folder = root / built
+    if not folder.is_dir():
+        return [f'hero_every_page: {built}/ is missing; build the site first, so its pages can be read (site-kit#519)']
+    out = []
+    for page in sorted(folder.rglob("*.html")):
+        rel = page.relative_to(folder).as_posix()
+        if rel == "404.html" or page.is_symlink():
+            continue
+        scan = _HeroScan()
+        scan.feed(page.read_text(encoding="utf-8", errors="replace"))
+        if scan.noindex or scan.main_at is None:
+            continue
+        tag, attrs = scan.first or (None, {})
+        if not (tag == "section" and "hero" in (attrs.get("class") or "").split()):
+            out.append(f"{built}/{rel}: the page doesn't open with a hero (main's first element must be a section.hero), site-kit#519")
+            continue
+        img = scan.img or {}
+        if not ((img.get("alt") or "").strip() and (img.get("width") or "").isdigit() and (img.get("height") or "").isdigit()):
+            out.append(f"{built}/{rel}: the hero's art needs an img with alt text, width and height (site-kit#519)")
+        if scan.cap is not None and len(scan.cap.strip()) > 120:
+            out.append(f"{built}/{rel}: the hero's caption is {len(scan.cap.strip())} characters; at most 120 (site-kit#519)")
+    return out
 
 
 def _links_to(section, target):
@@ -559,6 +637,7 @@ def check(root, catalog, site=None):
     problems += _soul(root, f)
     problems += _memory(root)
     problems += _post_images(root, f)
+    problems += _heroes(root, f)
     baseline = reg.get("baseline") if isinstance(reg.get("baseline"), dict) else {}
     approved = {(a.get("ref"), a.get("kind"), a.get("name")) for a in (reg.get("approved") if isinstance(reg.get("approved"), list) else []) if isinstance(a, dict)}
     listed = {(e["kind"], e["name"]): e for e in f.get("site_only", [])}

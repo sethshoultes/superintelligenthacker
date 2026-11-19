@@ -283,8 +283,8 @@
   },
   "hero": {
    "name": "hero",
-   "version": "1.5",
-   "title": "Hero: the page's headline, a line under it, a picture and one button",
+   "version": "1.6",
+   "title": "Hero: the page's headline, a line under it, a picture with an optional caption and panel strip, and one button",
    "props": {
     "kicker": {
      "type": "text",
@@ -301,6 +301,21 @@
     },
     "image": {
      "type": "image"
+    },
+    "caption": {
+     "type": "text",
+     "max": 120
+    },
+    "strip": {
+     "type": "items",
+     "min": 2,
+     "max": 3,
+     "fields": {
+      "image": {
+       "type": "image",
+       "required": true
+      }
+     }
     },
     "cta": {
      "type": "link"
@@ -374,7 +389,24 @@
          {
           "part": "image",
           "src": "{image.src}",
-          "alt": "{image.alt}"
+          "alt": "{image.alt}",
+          "caption": "{caption}"
+         },
+         {
+          "part": "columns",
+          "children": [
+           {
+            "part": "column",
+            "each": "strip",
+            "children": [
+             {
+              "part": "image",
+              "src": "{item.image.src}",
+              "alt": "{item.image.alt}"
+             }
+            ]
+           }
+          ]
          }
         ]
        }

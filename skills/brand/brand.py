@@ -60,7 +60,7 @@ FONT_FAMILY = re.compile(r"[A-Za-z0-9][A-Za-z0-9 ._-]{0,59}")        # written a
 FONT_FALLBACK = re.compile(r"[A-Za-z0-9 ,._-]{0,120}")                # e.g. Georgia, serif: no quote, bracket or semicolon
 FONT_WEIGHT = re.compile(r"(?:normal|bold|[1-9]00(?: [1-9]00)?)")
 FONT_STYLE = re.compile(r"(?:normal|italic|oblique)")
-OPTIONAL |= set(URLS) | set(SLUGS) | set(PLUGIN_SLUGS) | {"fonts", "unsplash", "email", "analytics", "header", "text_align", "bands", "main", "headings", "footer", "looks", "panels"}
+OPTIONAL |= set(URLS) | set(SLUGS) | set(PLUGIN_SLUGS) | {"fonts", "unsplash", "email", "analytics", "header", "text_align", "bands", "main", "headings", "footer", "looks", "panels", "body"}
 SLUG = re.compile(r"^[a-z0-9][a-z0-9_-]*(?:/[a-z0-9][a-z0-9_-]*)*$")   # a WordPress page slug or REST namespace
 PLUGIN_SLUG = re.compile(r"^[a-z0-9][a-z0-9-]*$")   # one path segment: it names a folder, a zip and a URL
 ICONS = ("16", "32", "180", "192", "512", "ico")
@@ -322,12 +322,19 @@ def problems(rec, root):
                     out.append(f"bands.{name}.font {v['font']!r} is not a role of the brand's fonts")
     if "panels" in rec:   # site-kit#415: comic panels, a closed set; the shadow is one of the brand's own colour roles
         pn = rec["panels"]   # site-kit#478: optionally Foo's whole page ("page": "comic") and Foo's hero ("hero": "scene")
-        if not (isinstance(pn, dict) and {"style", "shadow"} <= set(pn) <= {"style", "shadow", "tab", "page", "hero"} and pn["style"] == "comic"
+        if not (isinstance(pn, dict) and {"style", "shadow"} <= set(pn) <= {"style", "shadow", "tab", "page", "hero", "family_links", "cta"} and pn["style"] == "comic"
                 and isinstance(rec.get("colours"), dict)
                 and all(isinstance(pn.get(k, pn["shadow"]), str) and pn.get(k, pn["shadow"]) in rec["colours"] for k in ("shadow", "tab"))
-                and pn.get("page", "comic") == "comic" and pn.get("hero", "scene") == "scene"):
+                and pn.get("page", "comic") == "comic" and pn.get("hero", "scene") == "scene"
+                and pn.get("family_links", "ink") == "ink" and pn.get("cta", "compact") == "compact"
+                and (pn.get("page") == "comic" or not {"family_links", "cta"} & set(pn))):
             out.append('panels must be {"style": "comic", "shadow": a role of the brand\'s colours}, with "tab" (another role, '
-                       'the middle card\'s title strip), "page": "comic" and "hero": "scene" optional')
+                       'the middle card\'s title strip), "page": "comic", "hero": "scene", "family_links": "ink" and "cta": "compact" (these two with "page") optional')
+    if "body" in rec:   # site-kit#517: running text's size and line length, for reading (Seth on Key's pages); absent writes nothing
+        bd = rec["body"]
+        if not (isinstance(bd, dict) and bd and set(bd) <= {"size", "measure"}
+                and ("size" not in bd or body_size(bd["size"])) and ("measure" not in bd or body_measure(bd["measure"]))):
+            out.append('body must be {"size": "1rem" to "1.5rem", "measure": "45ch" to "90ch"}, each optional, and nothing else')
     if "looks" in rec:   # site-kit#413: the looks a visitor picks from; theme-picker checks each look at the build
         lk = rec["looks"]
         if not (isinstance(lk, dict) and set(lk) == {"label", "variants"} and _text(lk["label"]) and len(lk["label"]) <= 40
@@ -344,6 +351,18 @@ def problems(rec, root):
             if not (isinstance(s["url"], str) and s["url"].startswith("https://")):
                 out.append(f"support.url: {s['url']!r} must start with https://")
     return out
+
+
+def body_size(v):
+    """A body text size: rem, 1 to 1.5 (site-kit#517)."""
+    m = isinstance(v, str) and re.fullmatch(r"(1(?:\.[0-9]{1,3})?)rem", v)
+    return bool(m) and float(m.group(1)) <= 1.5
+
+
+def body_measure(v):
+    """A running-text line length: ch, 45 to 90 (site-kit#517)."""
+    m = isinstance(v, str) and re.fullmatch(r"([4-9][0-9])ch", v)
+    return bool(m) and 45 <= int(m.group(1)) <= 90
 
 
 def _sender(value):

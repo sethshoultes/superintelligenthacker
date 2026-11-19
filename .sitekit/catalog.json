@@ -962,7 +962,7 @@
     },
     {
       "name": "series",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "about": "A named run of posts a reader finds as one: on each post, a line with the series' title (linking its hub), its place (\"3 of 10\") and Previous and Next; on the blog's index, a strip with the series' title, one line about it and its posts in order. It reads the site's data/series.json and fills marked elements, so a build without it keeps the marker's own text. Static HTML, no script.",
       "hooks": [
         "head.styles"
@@ -981,7 +981,7 @@
         }
       },
       "readme": "plugins/series/README.md",
-      "hash": "63b3a22fb9c9f6e6ec56d036a85adfcf53be426929289fcdd9a45c1d44dc1134",
+      "hash": "cb6af974153fba27b07a529057f3fbf2206f3cefd920e06790ae1e4171e2518a",
       "used_by": {}
     },
     {

@@ -47,7 +47,7 @@ CONTAINS = {"group": PARTS - {"column", "button", "list-item"}, "column": PARTS 
 #   a set or a range: a literal from it, never a slot
 FIELDS = {"group": {"tag": {"div", "header", "main", "section", "article", "aside", "footer"}, "slot": "slot"}, "columns": {}, "column": {},
           "heading": {"level": range(1, 7), "text": "words"}, "paragraph": {"text": "words"},
-          "image": {"src": "src", "alt": "alt"}, "buttons": {}, "button": {"text": "words", "href": "href", "newtab": {True}}, "list": {},
+          "image": {"src": "src", "alt": "alt", "caption": "words"}, "buttons": {}, "button": {"text": "words", "href": "href", "newtab": {True}}, "list": {},
           "list-item": {"text": "words"}, "details": {"summary": "words"}, "quote": {"cite": "words"}, "gallery": {},
           "site-title": {}, "site-logo": {}, "navigation": {"label": {"Main", "Footer"}, "where": {"header", "footer"}},
           "query": {"kind": {"posts"}, "count": range(1, 25)}}
@@ -160,8 +160,11 @@ def _check_props(props, where):
         if spec["type"] == "count" and not (all(isinstance(spec.get(k), int) and not isinstance(spec.get(k), bool) for k in ("min", "max"))
                                             and spec["min"] <= spec["max"]):
             out.append(f"{w}: a count has a whole min and max, min not above max")
-        elif spec["type"] != "count" and "min" in spec:
-            out.append(f"{w}: only a count takes min")
+        elif spec["type"] == "items" and "min" in spec and not (isinstance(spec["min"], int) and not isinstance(spec["min"], bool)
+                                                                 and 1 <= spec["min"] <= spec.get("max", MAX_ITEMS)):
+            out.append(f"{w}: an items min is a whole number from 1 to its max")
+        elif spec["type"] not in ("count", "items") and "min" in spec:
+            out.append(f"{w}: only a count or items takes min")
         if spec["type"] == "choice":
             vals = spec.get("values")
             if not (isinstance(vals, list) and vals and all(isinstance(v, str) and re.fullmatch(r"[a-z][a-z0-9-]{0,19}", v) for v in vals)):
@@ -397,6 +400,8 @@ def _value_problems(value, spec, where, publish):
             out.append(f"{where}: is required and empty")
         if len(value) > spec.get("max", MAX_ITEMS):
             out.append(f"{where}: more than {spec.get('max', MAX_ITEMS)} items")
+        if value and len(value) < spec.get("min", 1):   # an optional list may be left out, never cut short (hero 1.6's strip)
+            out.append(f"{where}: fewer than {spec['min']} items")
         for i, it in enumerate(value):
             if not isinstance(it, dict):
                 out.append(f"{where}[{i}]: must be an object")

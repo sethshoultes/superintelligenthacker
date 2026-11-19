@@ -42,6 +42,8 @@ DATE = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}\Z")   # ASCII digits only; a real
 MONTHS = ("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November",
           "December")   # fixed, not %B: the build machine's locale never changes a page
 FIELDS = ("title", "shelf", "hint", "covers", "screens", "updated")
+HERO_FIELDS = ("hero_image", "hero_alt", "hero_caption")   # optional (site-kit#516, #519): the page's hero art, its alt, its caption
+FIGURE = re.compile(r'!\[([^\]]*)\]\((/docs-img/[a-z0-9][a-z0-9-]{0,63}\.webp)(?: "([^"]*)")?\)')
 
 
 def strict(name, text):
@@ -66,12 +68,12 @@ def front_matter(name, text):
         raise layout.LayoutError(f"{name}: no front matter")
     f = {}
     for line in m.group(1).split("\n"):
-        kv = re.fullmatch(r"([a-z]+): (.*)", line)
+        kv = re.fullmatch(r"([a-z_]+): (.*)", line)
         if not kv:
             raise layout.LayoutError(f"{name}: not a front-matter line: {line!r}")
         if kv.group(1) in f:
             raise layout.LayoutError(f"{name}: {kv.group(1)} is repeated")
-        if kv.group(1) not in FIELDS:
+        if kv.group(1) not in FIELDS + HERO_FIELDS:
             raise layout.LayoutError(f"{name}: unknown key {kv.group(1)}")
         f[kv.group(1)] = kv.group(2)
     for k in FIELDS:
@@ -85,6 +87,14 @@ def front_matter(name, text):
         raise layout.LayoutError(f"{name}: updated must be a date, like 2026-11-19") from None
     if len(f["hint"]) > 140:
         raise layout.LayoutError(f"{name}: the hint is over 140 characters")
+    slug = pathlib.PurePosixPath(name).stem
+    if set(f) & set(HERO_FIELDS):   # the hero: art and alt together, the art at the page's own path, a caption only with art
+        if not (f.get("hero_image") and f.get("hero_alt")):
+            raise layout.LayoutError(f"{name}: hero_image and hero_alt go together")
+        if f["hero_image"] != f"/img/hero/docs-{slug}.webp":
+            raise layout.LayoutError(f"{name}: hero_image must be /img/hero/docs-{slug}.webp")
+        if len(f["hero_alt"]) > 160 or len(f.get("hero_caption", "")) > 120:
+            raise layout.LayoutError(f"{name}: hero_alt is at most 160 characters and hero_caption at most 120")
     return f, text[m.end():].strip()
 
 
@@ -160,6 +170,7 @@ def load(root):
         if f["covers"] not in reg:
             raise layout.LayoutError(f"{DIR}/{name}: covers {f['covers']} is not a feature in features.json")
         docs.append({"slug": slug, **{k: f[k] for k in ("title", "shelf", "hint", "covers", "updated")},
+                     "hero": {k[5:]: f[k] for k in HERO_FIELDS if k in f} or None,
                      "html": render(f"{DIR}/{name}", body), "text": words(body)})
     if not docs:
         raise layout.LayoutError(f"{DIR} has no docs")
@@ -206,6 +217,17 @@ def render(name, body):
     out = []
     for block in re.split(r"\n\s*\n", body.strip()):
         lines = [ln.rstrip() for ln in block.split("\n")]
+        fig = FIGURE.fullmatch(lines[0]) if len(lines) == 1 else None
+        if fig:   # site-kit#516: a figure, alt required; build.py puts the file's width and height on it
+            alt, src, cap = fig.group(1).strip(), fig.group(2), (fig.group(3) or "").strip()
+            if not alt or len(alt) > 160 or len(cap) > 120:
+                raise layout.LayoutError(f"{name}: a figure needs alt text of up to 160 characters, and a caption of up to 120")
+            e = serialize.escape
+            out.append(f'<figure class="wp-block-image doc-figure"><img src="{src}" alt="{e(alt)}"/>'
+                       + (f'<figcaption class="wp-element-caption">{e(cap)}</figcaption>' if cap else "") + "</figure>")
+            continue
+        if lines[0].startswith("!["):
+            raise layout.LayoutError(f"{name}: a figure is a line of its own: ![alt](/docs-img/<name>.webp \"caption\"), WebP under /docs-img/")
         h = re.fullmatch(r"(#{2,3}) (.+)", lines[0])
         if h and len(lines) == 1:
             out.append(f"<h{len(h.group(1))}>{inline(name, h.group(2))}</h{len(h.group(1))}>")
@@ -237,6 +259,17 @@ def url(d):
     return f"{INDEX}{d['slug']}/"
 
 
+def hero(d):
+    """A doc's hero (site-kit#516, #519): the kit's own hero block, its title and hint over the art, so a docs page opens as
+    every family page does. [] for a doc with no hero_image, which renders exactly as before."""
+    if not d.get("hero"):
+        return []
+    props = {"heading": d["title"], "lead": d["hint"], "image": {"src": d["hero"]["image"], "alt": d["hero"]["alt"]}}
+    if d["hero"].get("caption"):
+        props["caption"] = d["hero"]["caption"]
+    return [{"id": f"doc-{d['slug']}", "block": "hero@1", "props": props}]
+
+
 def with_pages(record, lib):
     """The record with /docs/ (unless it has one) and a page per doc, in no menu, each described by its hint."""
     if not lib:
@@ -245,7 +278,7 @@ def with_pages(record, lib):
     if not any(isinstance(p, dict) and p.get("path") == INDEX for p in pages):
         pages.append({"path": INDEX, "type": "page", "title": lib["config"]["title"], "menu": "none", "sections": [],
                       "description": f"{lib['config']['title']}: every doc, by shelf, with a search."})
-    pages += [{"path": url(d), "type": "page", "title": d["title"], "description": d["hint"], "menu": "none", "sections": []}
+    pages += [{"path": url(d), "type": "page", "title": d["title"], "description": d["hint"], "menu": "none", "sections": hero(d)}
               for d in lib["docs"]]
     return {**record, "pages": pages}
 
