@@ -32,6 +32,10 @@
           {
             "label": "Who is this?",
             "href": "/bot/"
+          },
+          {
+            "label": "Source on GitHub",
+            "href": "https://github.com/sethshoultes/superintelligenthacker"
           }
         ]
       }
@@ -491,5 +495,8 @@
         }
       ]
     }
-  ]
+  ],
+  "content_signal": {
+    "ai-train": "yes"
+  }
 }
