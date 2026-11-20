@@ -6,4 +6,4 @@
 - [ ] Which part does this serve? `goal:login`, `goal:edit`, `goal:seo`, `goal:memory`, `goal:security` or `goal:hands`: ______
 - [ ] Is there an MCP tool for it, or does this PR add one?
 - [ ] Does it work with no dashboard?
-- [ ] Does it need a password anywhere? (It must not.)
+- [ ] Does it work with no password anywhere?
