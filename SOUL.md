@@ -31,7 +31,7 @@ Visitors are people who run a website and want to know how someone trying to get
 Check [`CATALOG.md`](https://github.com/sethshoultes/site-kit/blob/main/CATALOG.md) before building anything. A new content
 type or feature starts as a site-kit plugin proposal, not as code.
 
-- **Plugins used:** agent-files: markdown twins, /a2a and /mcp
+- **Plugins used:** agent-files: markdown twins, /a2a and /mcp; official-embed: the lazy YouTube film on /how-it-works/ (no request to YouTube until a click)
 - **Skills used:** site-templates (the `product` starter, site-kit v0.96.191)
 - **Image, voice and text recipes used:** none
 - **Style recipes used:** none
