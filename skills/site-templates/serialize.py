@@ -71,7 +71,26 @@ def _wrap(name, inner, attrs=None):
     return f"<!-- wp:{name}{_attrs(attrs)} -->{inner}<!-- /wp:{name} -->"
 
 
-def _node(node, props, item, anchor=None, kind=None):
+def _inline(text):
+    """A links-on text's HTML (site-kit#526): each plain run escaped, each [words](href) a link. With no link in it,
+    exactly escape(text). The class is how the twin knows these links from a blog post's own (agents._md_linked)."""
+    return "".join(escape(w) if h is None else f'<a class="sk-text-link" href="{escape(_safe("href", h))}">{escape(w)}</a>'
+                   for w, h in layout.inline_parts(text))
+
+
+def _linked(spec):
+    """The paragraph slots whose prop or item field opts in to inline links: "{name}" and "{item.field}"."""
+    out = set()
+    for name, ps in spec["props"].items():
+        if ps["type"] == "text" and ps.get("links"):
+            out.add("{%s}" % name)
+        for f, fs in ps.get("fields", {}).items() if ps["type"] == "items" else ():
+            if fs["type"] == "text" and fs.get("links"):
+                out.add("{item.%s}" % f)
+    return frozenset(out)
+
+
+def _node(node, props, item, anchor=None, kind=None, linked=frozenset()):
     """The markup of one tree node, or "" when it shows nothing. A section's outer group carries its id as `anchor` and
     its block's name as a class (`kind`), WordPress's own className: so a page's FAQ is class "faq" and its closing call
     to action "cta", which is how the site standard's faq-last check finds them."""
@@ -87,9 +106,9 @@ def _node(node, props, item, anchor=None, kind=None):
         raise layout.LayoutError(f"{part} needs content (posts) the templates do not have yet")
     f = lambda k: _fill(node[k], props, item) if k in node else ""   # noqa: E731
     if node.get("each"):
-        return "".join(_node({k: v for k, v in node.items() if k != "each"}, props, it)
+        return "".join(_node({k: v for k, v in node.items() if k != "each"}, props, it, linked=linked)
                        for it in props.get(node["each"], []) if isinstance(it, dict))
-    kids = "".join(_node(k, props, item) for k in node.get("children", []))
+    kids = "".join(_node(k, props, item, linked=linked) for k in node.get("children", []))
     if part == "group":
         tag = node.get("tag", "div")
         # A plugin slot (site-kit#223) is an empty group that stays, named by one class: WordPress's className, so its
@@ -123,10 +142,12 @@ def _node(node, props, item, anchor=None, kind=None):
                      {"level": level} if level != 2 else None) if text.strip() else ""
     if part == "paragraph":
         text = f("text")
-        return _wrap("paragraph", f"<p>{escape(text)}</p>") if text.strip() else ""
+        body = _inline(text) if node.get("text") in linked else escape(text)
+        return _wrap("paragraph", f"<p>{body}</p>") if text.strip() else ""
     if part == "list-item":
         text = f("text")
-        return _wrap("list-item", f"<li>{escape(text)}</li>") if text.strip() else ""
+        body = _inline(text) if node.get("text") in linked else escape(text)
+        return _wrap("list-item", f"<li>{body}</li>") if text.strip() else ""
     if part == "image":
         src, alt, caption = f("src"), f("alt"), (f("caption") if "caption" in node else "")
         cap = f'<figcaption class="wp-element-caption">{escape(caption)}</figcaption>' if caption.strip() else ""   # site-kit#519
@@ -189,7 +210,7 @@ def section(sec, blocks, run=()):
             kind += " " + end
     props = {k: layout.prefill_links(v) if spec["props"].get(k, {}).get("type") == "prefill" and isinstance(v, str) else v
              for k, v in sec["props"].items()}   # site-kit#435: a prefill is used by its parts, the links made here
-    return _node(tree, props, None, sec.get("id"), kind)
+    return _node(tree, props, None, sec.get("id"), kind, _linked(spec))
 
 
 def page(record, path, blocks, page_types, brand=None):
@@ -259,7 +280,9 @@ def _dynamic(part, site, current, attrs=None):
     attrs = attrs or {}
     header = attrs.get("menu") != "footer"   # a page marked menu: footer shows in the footer's menu only
     if header and site.get("menu"):   # the record's own menu entries replace the pages-derived header menu (site-kit#243)
-        items = "".join(f'<li class="wp-block-navigation-item"><a class="wp-block-navigation-item__content" '
+        # members' sign-in link (site-kit#601) is marked, so a look can keep its own last-item style off it
+        items = "".join('<li class="wp-block-navigation-item' + (' sk-nav-sign-in' if href == layout.SIGN_IN else "")
+                        + '"><a class="wp-block-navigation-item__content" '
                         + ('aria-disabled="true"' if layout.PLACEHOLDER.fullmatch(href) else f'href="{escape(href)}"')   # a starter's address still to fill (site-kit#349)
                         + (' aria-current="page"' if href == current else "") + f">{escape(label)}</a></li>" for label, href in site["menu"])
         label = attrs.get("ariaLabel") or site["name"]

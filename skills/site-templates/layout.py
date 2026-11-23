@@ -17,6 +17,7 @@ Standard library only.
 import argparse
 import copy
 import datetime
+import functools
 import json
 import os
 import pathlib
@@ -59,15 +60,45 @@ NAME = re.compile(r"^[a-z][a-z0-9-]{0,39}$")
 SLOT_NAME = re.compile(r"^[a-z0-9-]{1,40}$")   # a plugin slot's name (site-kit#223): it goes into a class, so nothing else
 PATH = re.compile(r"^/(?:[a-z0-9][a-z0-9-]*/)*$")
 PAGE_HREF = re.compile(r"^/(?:[a-z0-9][a-z0-9-]*/)*(?:#[A-Za-z0-9_-]+)?$")   # a page path, maybe with an #anchor
+#: members' sign-in route (site-kit#601): a menu may link it, and for a signed-in visitor the gate's edge swaps it for their menu
+SIGN_IN = "/_doorman/sign-in"
+# site-kit#563: the record's optional auth_host, the host that signs people in: an https origin, lowercase, nothing after the host
+AUTH_HOST = re.compile(r"https://[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+")
 # An address that goes somewhere: https:// plus a host, mailto: plus an address, tel: plus digits, # plus a name. No
 # address needs a < > " ` or backslash, so none is allowed (site-kit#134): each one only ever ends an attribute, a markdown
-# link or a tag early.
-URL_CHAR = r'[^\s<>"`\\]'
+# link or a tag early. Nor a control byte (mi-dev-2 on site-kit#529): \x00-\x1f and \x7f would be written raw into the href.
+URL_CHAR = r'[^\s<>"`\\\x00-\x1f\x7f]'
 SAFE_HREF = re.compile(rf"^(?:https://[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+(?:[/?#]{URL_CHAR}*)?"
                        rf"|mailto:[A-Za-z0-9._%+'-]+@[A-Za-z0-9.-]+\.[A-Za-z]{{2,}}|tel:\+?[0-9][0-9 ().-]{{5,}}[0-9]|#[A-Za-z0-9_-]+)$")
 # An image: a site path or an https address, never with a ".." segment (site-kit#134).
 SAFE_SRC = re.compile(rf"^(?!.*/\.\.(?:/|$))(?:/(?!/)[A-Za-z0-9._~-][A-Za-z0-9._~/-]*|https://[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+/{URL_CHAR}*)$")
 MAX_TEXT = 2000
+# site-kit#526: a text prop whose block opts in with "links": true may carry [words](href) links, and no other markup.
+# A link's href is held to a link prop's rule. Anything left with a "](" after the links are taken out is refused, so
+# an empty [] or (), a nested [ or an address with a space never builds as half a link.
+INLINE_LINK = re.compile(r"\[([^\[\]\n]+)\]\(([^()\s]+)\)")
+
+
+def inline_parts(text):
+    """[(words, href or None)]: a links-on text cut into plain runs and its links, in order."""
+    out, at = [], 0
+    for m in INLINE_LINK.finditer(text):
+        if m.start() > at:
+            out.append((text[at:m.start()], None))
+        out.append((m.group(1), m.group(2)))
+        at = m.end()
+    if at < len(text):
+        out.append((text[at:], None))
+    return out
+
+
+def inline_problems(text, where):
+    """What is wrong with the links in a links-on text."""
+    out = [f"{where}: a link [{w}]({h}) must go to a page path, https:, mailto:, tel: or #anchor"
+           for w, h in inline_parts(text) if h is not None and not (PAGE_HREF.fullmatch(h) or SAFE_HREF.fullmatch(h))]
+    if "](" in INLINE_LINK.sub("", text):
+        out.append(f"{where}: a link is written [words](address), with no space in the address and no [ inside the words")
+    return out
 # site-kit#435: a prefill prop is a request typed into Claude or ChatGPT when the visitor opens it. The build makes both
 # links, the request URL-encoded after ?q=, and refuses one whose link would pass PREFILL_LIMIT characters (a longer
 # address can break), so a page never carries a link that opens an empty or cut-off chat. Only these two hosts.
@@ -151,9 +182,11 @@ def _check_props(props, where):
         if not isinstance(spec, dict) or spec.get("type") not in PROP_TYPES:
             out.append(f"{w}: type must be one of {', '.join(sorted(PROP_TYPES))}")
             continue
-        out += [f"{w}: unknown key {k!r}" for k in sorted(set(spec) - {"type", "required", "max", "fields", "needs", "values", "also", "min"})]
+        out += [f"{w}: unknown key {k!r}" for k in sorted(set(spec) - {"type", "required", "max", "fields", "needs", "values", "also", "min", "links"})]
         if not isinstance(spec.get("required", False), bool):
             out.append(f"{w}: required must be true or false")
+        if "links" in spec and not (spec["type"] == "text" and spec["links"] is True):
+            out.append(f"{w}: only a text takes links, and only as true")
         if spec["type"] in ("text", "items", "prefill") and not (isinstance(spec.get("max", 1), int) and not isinstance(spec.get("max"), bool)
                                                      and spec.get("max", 1) >= 1):
             out.append(f"{w}: max must be a whole number of at least 1")
@@ -184,9 +217,11 @@ def _check_props(props, where):
                     if not isinstance(s, dict) or s.get("type") not in {"text", "link", "image", "choice", "count"}:
                         out.append(f"{fw}: an item field is text, link, image, choice or count")
                         continue
-                    out += [f"{fw}: unknown key {k!r}" for k in sorted(set(s) - {"type", "required", "max", "values", "min"})]
+                    out += [f"{fw}: unknown key {k!r}" for k in sorted(set(s) - {"type", "required", "max", "values", "min", "links"})]
                     if not isinstance(s.get("required", False), bool):
                         out.append(f"{fw}: required must be true or false")
+                    if "links" in s and not (s["type"] == "text" and s["links"] is True):
+                        out.append(f"{fw}: only a text takes links, and only as true")
                     if s["type"] == "choice" and not (isinstance(s.get("values"), list) and s["values"] and all(
                             isinstance(v, str) and re.fullmatch(r"[a-z][a-z0-9-]{0,19}", v) for v in s["values"])):
                         out.append(f"{fw}: a choice lists its values (short lowercase words)")
@@ -357,6 +392,8 @@ def _value_problems(value, spec, where, publish):
             out.append(f"{where}: longer than {spec.get('max', MAX_TEXT)} characters")
         if spec.get("required") and blank(value):
             out.append(f"{where}: is required and empty")
+        if spec.get("links"):
+            out += inline_problems(value, where)
     elif t == "prefill":
         if not isinstance(value, str):
             return [f"{where}: must be text (the request typed into Claude or ChatGPT)"]
@@ -433,6 +470,8 @@ def _links(value, spec):
     """Every internal page path a prop value links to."""
     if spec["type"] == "link" and isinstance(value, dict) and PAGE_HREF.fullmatch(str(value.get("href", ""))):
         yield value["href"]
+    if spec["type"] == "text" and spec.get("links") and isinstance(value, str):
+        yield from (h for _, h in inline_parts(value) if h is not None and PAGE_HREF.fullmatch(h))
     if spec["type"] == "items" and isinstance(value, list):
         for it in value:
             for f, fs in spec["fields"].items():
@@ -466,7 +505,7 @@ def problems(record, blocks, page_types, publish=False, require=(), brand=None):
     """Every problem with a whole layout record. With the brand record, a section's `band` is also held to what the brand defines."""
     if _has_surrogate(record):  # first, and alone: every other message may quote the text, and none of it can be written
         return ["the record has a broken character (a lone surrogate, U+D800 to U+DFFF) that can't be saved: retype the text that holds it"]
-    if not isinstance(record, dict) or set(record) - {"template", "why", "pages", "slots", "menu", "footer", "business", "email", "content_signal", "skills"} or not isinstance(record.get("pages"), list):
+    if not isinstance(record, dict) or set(record) - {"template", "why", "pages", "slots", "menu", "footer", "business", "email", "security", "auth_md", "security_schemes", "content_signal", "skills", "auth_host"} or not isinstance(record.get("pages"), list):
         return ['the record is {"template": name, "why": text, "pages": [...]} and may have "slots"']
     out, ids, paths, links = [], set(), [], []
     # game-dev-3 on #125: a record must name a starter that exists, and that starter's routes always apply, so neither
@@ -581,6 +620,8 @@ def problems(record, blocks, page_types, publish=False, require=(), brand=None):
         import discovery   # here, not at the top: layout.py is loaded by path before its folder is on sys.path
         out += [f"skills: {m}" for m in discovery.problems({"origin": "https://example.com", "name": "site", "description": "site",
                                                              "skills": record["skills"]})]
+    if "auth_host" in record and not (isinstance(record["auth_host"], str) and AUTH_HOST.fullmatch(record["auth_host"])):
+        out.append('auth_host must be the sign-in host\'s https origin, e.g. "https://auth.example.com": lowercase, no path or port')
     if "menu" in record:
         out += _menu_problems(record["menu"], links, brand, publish)
     if "footer" in record:
@@ -590,6 +631,33 @@ def problems(record, blocks, page_types, publish=False, require=(), brand=None):
     # The lead on site-kit#301: a site's public email comes only from its own record, never the brand's support address.
     if "email" in record and not (isinstance(record["email"], str) and EMAIL.fullmatch(record["email"])):
         out.append("email must be one address, like hello@example.com")
+    # doorman#192: /auth.md, how an agent signs in here, held to discovery.py's rules. herdos's agent-auth check fails a site
+    # that publishes auth docs with no sign-up on its agent card, so auth_md comes with the card's security_schemes.
+    if "security_schemes" in record:
+        out += [p.replace("a2a.security_schemes", "security_schemes in .sitekit/layout.json", 1)
+                for p in _sibling("discovery").scheme_problems(record["security_schemes"])]
+    if "auth_md" in record:
+        disc = _sibling("discovery")
+        if not disc.auth_md_ok(record["auth_md"]):
+            out.append(disc.AUTH_MD_RULE)
+        elif PLACEHOLDER.sub("", record["auth_md"]).count("{{"):
+            out.append("auth_md holds a {{...}} that is not a {{placeholder:...}}")
+        elif publish and "{{" in record["auth_md"]:
+            out.append("auth_md still holds a {{placeholder:...}}")
+        if "security_schemes" not in record:
+            out.append("auth_md needs security_schemes in .sitekit/layout.json: the agent card must declare the sign-up "
+                       "/auth.md describes (herdos's agent-auth check)")
+    if "security" in record:   # site-kit#528: security.txt's own contact and policy, each optional
+        sec = record["security"]
+        # A contact may be elsewhere (a mail provider, a form host); the policy is one of the site's own pages, written on
+        # its own origin, so a record can't point security.txt's Policy at another host (maint-review and mi-dev-3 on #553).
+        contact_ok = lambda v: isinstance(v, str) and v.startswith(("mailto:", "https://")) and bool(SAFE_HREF.fullmatch(v))   # noqa: E731
+        if not (isinstance(sec, dict) and sec and not set(sec) - {"contact", "policy"}
+                and ("contact" not in sec or contact_ok(sec["contact"]))
+                and ("policy" not in sec or (isinstance(sec["policy"], str) and bool(PATH.fullmatch(sec["policy"]))))):
+            out.append('security is {"contact": a mailto: or https: address, "policy": a page path of this site}, at least one')
+        elif PATH.fullmatch(sec.get("policy", "")):
+            links.append(("security.policy", sec["policy"]))
     anchors = {p["path"]: {s.get("id") for s in p["sections"] if isinstance(s, dict)}
                for p in record["pages"] if isinstance(p, dict) and isinstance(p.get("sections"), list)}
     for w, href in links:
@@ -600,6 +668,18 @@ def problems(record, blocks, page_types, publish=False, require=(), brand=None):
             # game-dev-3 on #123: an #anchor must name something the page shows; a section's id is its anchor.
             out.append(f"{w}: links to {href}, but {target} has no section {anchor!r}")
     return out
+
+
+@functools.cache
+def _sibling(name):
+    """A module beside this file, loaded by its path, so layout.py works however a caller loaded it (by name or by path)."""
+    import importlib.util   # noqa: PLC0415
+    if name in sys.modules and getattr(sys.modules[name], "__file__", None) == str(pathlib.Path(__file__).with_name(f"{name}.py")):
+        return sys.modules[name]
+    spec = importlib.util.spec_from_file_location(f"_sitekit_{name}", pathlib.Path(__file__).with_name(f"{name}.py"))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
 
 
 BANDS = ("light", "dark", "card")
@@ -633,8 +713,10 @@ def _entry_problems(entry, w, links, waits=False):
         links.append((w, entry["href"]))
     elif waits and PLACEHOLDER.fullmatch(entry["href"]):
         pass
+    elif entry["href"] == SIGN_IN:
+        pass
     elif not (entry["href"].startswith("https://") and SAFE_HREF.fullmatch(entry["href"])):
-        out.append(f"{w}: href must be a page path (with an optional #anchor) or an https:// address")
+        out.append(f"{w}: href must be a page path (with an optional #anchor), an https:// address, or {SIGN_IN}")
     return out
 
 
@@ -694,10 +776,13 @@ def _slot_map_problems(record, blocks):
     for name, m in given.items():
         if not SLOT_NAME.fullmatch(name):
             out.append(f"slots: {name!r} is not 1 to 40 lowercase letters, digits and hyphens")
+        elif isinstance(m, dict) and set(m) == {"plugin"} and isinstance(m["plugin"], str) and NAME.fullmatch(m["plugin"]):
+            pass   # site-kit#531: a page plugin fills this slot in its page.html filter (build.with_page_plugins holds it)
         elif not (isinstance(m, dict) and set(m) == {"plugin", "config"} and isinstance(m["plugin"], str)
                   and NAME.fullmatch(m["plugin"]) and isinstance(m["config"], str) and CONFIG_PATH.fullmatch(m["config"])
                   and ".." not in m["config"].split("/")):
-            out.append(f'slots.{name}: is {{"plugin": a plugin folder\'s name, "config": a .json path inside the site}}')
+            out.append(f'slots.{name}: is {{"plugin": a plugin folder\'s name, "config": a .json path inside the site}}, or '
+                       '{"plugin": a page plugin\'s name} for one that fills it as it filters the page')
     try:
         placed = {n for names in slots(record, blocks).values() for n in names if isinstance(n, str)}
     except (KeyError, TypeError, AttributeError):   # a malformed page or block is reported by its own check

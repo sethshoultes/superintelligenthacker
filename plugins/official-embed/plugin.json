@@ -1,0 +1,47 @@
+{
+  "name": "official-embed",
+  "version": "0.2.0",
+  "fills_slots": true,
+  "about": "A platform's own embed in a site-templates slot (site-kit#380): Instagram first, a profile or a post, as the markup Instagram gives (its blockquote and embed.js), with a plain link inside the blockquote that shows when the script can't load. The URL is checked to the platform's own host and paths, every value is attribute-escaped, and there is no inline script. The README gives the exact _headers block that scopes the page's CSP to the platform's hosts. YouTube (site-kit#573): a facade of a site-local poster, a play button and a plain link; nothing goes to YouTube until the click, which swaps in a youtube-nocookie.com iframe.",
+  "hooks": {},
+  "filters": {},
+  "assets": [
+    "assets/official-embed.js",
+    "assets/official-embed.css"
+  ],
+  "config": {
+    "fields": {
+      "platform": {
+        "type": "string",
+        "required": true
+      },
+      "url": {
+        "type": "string"
+      },
+      "video_id": {
+        "type": "string"
+      },
+      "title": {
+        "type": "string"
+      },
+      "poster": {
+        "type": "string"
+      },
+      "link_text": {
+        "type": "string",
+        "required": true
+      },
+      "priority": {
+        "type": "boolean"
+      }
+    }
+  },
+  "slot_assets": {
+    "css": [
+      "assets/official-embed.css"
+    ],
+    "js": [
+      "assets/official-embed.js"
+    ]
+  }
+}

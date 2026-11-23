@@ -7,7 +7,7 @@ ORIGIN="${1:-https://superintelligenthacker.com}"
 export PYTHONDONTWRITEBYTECODE=1   # no __pycache__ in the vendored skills, which site_sync verify would refuse
 OUT="dist"
 if [ -d "${OUT:?}" ]; then rm -rf "${OUT:?}"; fi
-python3 skills/site-templates/build.py .sitekit/layout.json .sitekit/brand.json --origin "$ORIGIN" --out "$OUT" --publish
+python3 skills/site-templates/build.py .sitekit/layout.json .sitekit/brand.json --origin "$ORIGIN" --out "$OUT" --publish --assets media
 cp static/_headers "$OUT/_headers"   # HSTS and the CSP (public-site standard 13)
 # security.txt: the kit writes Contact from the record's one email (hello@) and no Policy line. Hacker's security contact is
 # security@ and its policy is /what-it-checks (WORDS v3.1 section 7). Set here until the kit takes them (site-kit#528).

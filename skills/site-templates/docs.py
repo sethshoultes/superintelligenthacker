@@ -223,7 +223,8 @@ def render(name, body):
             if not alt or len(alt) > 160 or len(cap) > 120:
                 raise layout.LayoutError(f"{name}: a figure needs alt text of up to 160 characters, and a caption of up to 120")
             e = serialize.escape
-            out.append(f'<figure class="wp-block-image doc-figure"><img src="{src}" alt="{e(alt)}"/>'
+            # loading="lazy" after alt: build.py's sizer matches '<img src="..." alt="' (hero art stays eager)
+            out.append(f'<figure class="wp-block-image doc-figure"><img src="{src}" alt="{e(alt)}" loading="lazy"/>'
                        + (f'<figcaption class="wp-element-caption">{e(cap)}</figcaption>' if cap else "") + "</figure>")
             continue
         if lines[0].startswith("!["):
@@ -336,7 +337,7 @@ SEARCH = """// The docs library's search (site-kit#485): same origin, no third p
 """
 
 
-STYLE = '/* The docs library (site-kit#485): the search in the content column, each hint under its title, quieter. Linked only\n   from the docs pages, so every other page, and every site with no docs, is unchanged. */\n.docs-search label { display: block; font-weight: 700; margin-bottom: .35rem; }\n.docs-search input { width: 100%; max-width: 32rem; font: inherit; padding: .5rem .75rem; border: 2px solid var(--st-ink); border-radius: .25rem; background: var(--st-ground); color: var(--st-ink); }\n.docs-search input:focus-visible { outline: 3px solid var(--st-accent); outline-offset: 2px; }\n.docs-search-band { padding-bottom: .5rem; }\n.docs-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); }\n.docs-list [data-doc][hidden] { display: none; }\n.docs-list h3 { font-size: 1.15rem; }\n.docs-list [data-doc] { position: relative; }\n.docs-list h3 a { text-decoration: none; }\n.docs-list h3 a:hover, .docs-list h3 a:focus-visible { text-decoration: underline; }\n.docs-list h3 a::after { content: \"\"; position: absolute; inset: 0; }\n.doc { max-width: 42rem; }\n.doc-hint, .doc-meta, .docs-count { color: var(--st-muted); }\n.doc-meta { font-size: .875rem; margin-top: -1rem; }\n'
+STYLE = '/* The docs library (site-kit#485): the search in the content column, each hint under its title, quieter. Linked only\n   from the docs pages, so every other page, and every site with no docs, is unchanged. */\n.docs-search label { display: block; font-weight: 700; margin-bottom: .35rem; }\n.docs-search input { width: 100%; max-width: 32rem; font: inherit; padding: .5rem .75rem; border: 2px solid var(--st-ink); border-radius: .25rem; background: var(--st-ground); color: var(--st-ink); }\n.docs-search input:focus-visible { outline: 3px solid var(--st-accent); outline-offset: 2px; }\n.docs-search-band { padding-bottom: .5rem; }\n.docs-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); }\n.docs-list [data-doc][hidden] { display: none; }\n.docs-list h3 { font-size: 1.15rem; }\n.docs-list [data-doc] { position: relative; }\n.docs-list h3 a { text-decoration: none; }\n.docs-list h3 a:hover, .docs-list h3 a:focus-visible { text-decoration: underline; }\n.docs-list h3 a::after { content: \"\"; position: absolute; inset: 0; }\n.doc { max-width: 42rem; }\n.doc-hint, .doc-meta, .docs-count { color: var(--st-muted); }\n.doc-meta { font-size: .875rem; margin-top: -1rem; }\n/* The figures of a doc (site-kit#554, the designer on key-site#39): a caption reads as a caption, under its figure with room\n   before the next step. A hero with art follows the kit rule in render.py (site-kit#569). */\n.doc figure { margin: 1.5rem 0 1.75rem; }\n.doc figcaption { margin-top: .5rem; font-size: .85rem; font-style: italic; color: var(--st-muted); text-align: center; }\n/* A long name in inline code (a scoped package, a path) wraps inside its card instead of running past it on a phone (the designer on key-site#57). */\n.doc code { overflow-wrap: anywhere; }\n'
 
 
 def head(lib, path):
@@ -346,14 +347,24 @@ def head(lib, path):
     return [f'<link rel="stylesheet" href="/{DOCS_CSS}">']
 
 
-def files(lib, made):
-    """{site path: text}: /docs/index.json, the search script, and each doc's twin at /docs/<slug>.md from `made`."""
+def ink_links(scope):
+    """site-kit#530: in a look whose accent is under 4.5:1 where the docs sit (Key's golden-age gold on cream, 1.84:1), a doc's
+    links (its breadcrumb, "All the docs", its own) take the ink with the accent as their underline, and the index's titles
+    the ink. `scope` is "" for the base look, or that look's html[data-variant="<key>"]."""
+    at = f"{scope} " if scope else ""
+    return (f"{at}.doc a:not(.wp-block-button__link) {{ color: var(--st-ink); text-decoration: underline; text-decoration-color: var(--st-accent); "
+            f"text-decoration-thickness: 2px; text-underline-offset: 4px; }}\n{at}.docs-list a {{ color: var(--st-ink); }}\n")
+
+
+def files(lib, made, ink_scopes=()):
+    """{site path: text}: /docs/index.json, the search script, the docs' stylesheet (with ink_links for each look in
+    `ink_scopes`), and each doc's twin at /docs/<slug>.md from `made`."""
     if not lib:
         return {}
     index = {"title": lib["config"]["title"], "commit": lib["config"]["source"]["commit"],
              "shelves": lib["config"]["shelves"],
              "docs": [{k: d[k] for k in ("slug", "title", "shelf", "hint", "covers", "updated")} | {"url": url(d), "words": d["text"]}
                       for d in lib["docs"]]}
-    out = {INDEX_JSON: json.dumps(index, ensure_ascii=False, indent=1) + "\n", SEARCH_JS: SEARCH, DOCS_CSS: STYLE}
+    out = {INDEX_JSON: json.dumps(index, ensure_ascii=False, indent=1) + "\n", SEARCH_JS: SEARCH, DOCS_CSS: STYLE + "".join(ink_links(s) for s in ink_scopes)}
     out.update({f"docs/{d['slug']}.md": made[f"docs/{d['slug']}/index.md"] for d in lib["docs"] if f"docs/{d['slug']}/index.md" in made})
     return out

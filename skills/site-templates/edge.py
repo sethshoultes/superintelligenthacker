@@ -78,13 +78,16 @@ def files(root, functions):
     return out
 
 
-PAGE_SPOTS = ("head.styles",)   # what a page plugin may fill or filter in a site-templates build (site-kit#478)
+# what a page plugin may fill or filter in a site-templates build (site-kit#478); body.end for a plugin whose script goes at
+# the end of the page (posthog, site-kit#555: named on a static site, it was dropped without a word)
+PAGE_SPOTS = ("head.styles", "body.end")
 PAGE_FILTERS = ("page.html",)
 
 
 def page_plugins(plugins):
     """The plugin folders a site-templates build runs on its pages (site-kit#478), by name: no "edge" block, and a
-    head.styles hook or a page.html filter (time-of-day, hero-character). A plugin.json that can't be read is none."""
+    head.styles or body.end hook or a page.html filter (time-of-day, hero-character, posthog). A plugin.json that can't be
+    read is none."""
     names = set()
     for d in sorted(pathlib.Path(plugins).iterdir()) if pathlib.Path(plugins).is_dir() else []:
         try:

@@ -1,0 +1,14 @@
+.official-embed-youtube { position: relative; max-width: 100%; }
+.official-embed-youtube__poster,
+.official-embed-youtube__play,
+.official-embed-youtube__frame { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; border: 0; }
+.official-embed-youtube__poster { object-fit: cover; background: #1e2531; }
+.official-embed-youtube__play { position: absolute; top: 0; left: 0; padding: 0; cursor: pointer; background: transparent; }
+.official-embed-youtube__play[hidden] { display: none; }
+.official-embed-youtube__play::before { content: ""; position: absolute; top: 50%; left: 50%; width: 72px; height: 72px; margin: -36px 0 0 -36px; border: 3px solid #fff; border-radius: 50%; box-sizing: border-box; background: rgba(30, 37, 49, 0.82); transition: background 0.15s; }
+.official-embed-youtube__play::after { content: ""; position: absolute; top: 50%; left: 50%; margin: -14px 0 0 -9px; border-style: solid; border-width: 14px 0 14px 24px; border-color: transparent transparent transparent #fff; }
+.official-embed-youtube__play:hover::before { background: rgba(30, 37, 49, 0.95); }
+/* A two-tone ring (dark outline, white inner line) holds 3:1 on a light poster and on a dark one. */
+.official-embed-youtube__play:focus-visible { outline: 4px solid #1e2531; outline-offset: -4px; box-shadow: inset 0 0 0 8px #fff; }
+.official-embed-youtube__play:focus-visible::before { background: #1e2531; }
+.official-embed-youtube__link { display: inline-block; margin-top: 0.5rem; text-decoration: underline; }

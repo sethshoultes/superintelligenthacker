@@ -121,6 +121,13 @@ def font_names(brand_rec):
 USES = ("sk-layout-stacked", "sk-logo", "sk-logo-large", "sk-style-link", "sk-title_size-small", "sk-size-small", "sk-size-medium", "sk-cta_style-link", "sk-style-dark", "sk-style-quote", "sk-stars", "sk-menu", "sk-footer-columns", "sk-footer-row", "/img/hero/", "wp-element-caption")   # the classes a section of this page may carry, each with its rule in look()
 
 
+def hero_then_text(sections):
+    """site-kit#526: a hero with no picture, right above a text or list section (the two whose gap the hero rule closes)."""
+    kind = lambda s: s["block"].split("@")[0]   # noqa: E731
+    return any(kind(a) == "hero" and not (a.get("props") or {}).get("image") and kind(b) in ("text", "list")
+               for a, b in zip(sections, sections[1:]))
+
+
 # One step down the heading scale (blocks.css sets h1 2rem-3rem, h2 1.6rem-1.9rem, h3 1.25rem); fixed here, in the conditional
 # style, so blocks.css and every unset site stay byte for byte as they were.
 SCALE_DOWN = {"h1": "font-size:clamp(1.6rem,4vw,2.25rem)", "h2": "font-size:clamp(1.35rem,2.5vw,1.6rem)", "h3": "font-size:1.1rem"}
@@ -186,6 +193,18 @@ def card_ink(brand_rec):
     return "#000000" if luminance(surface) > 0.179 else "#ffffff"
 
 
+def look_colours(brand_rec):
+    """("", the base colours), then (html[data-variant="<key>"], that look's colours) for each look after the default (whose vars
+    change no token, theme-picker), so a rule that needs a contrast holds in every look a visitor can pick (site-kit#530, #562)."""
+    base = brand_rec["colours"]
+    out = [("", base)]
+    for v in ((brand_rec.get("looks") or {}).get("variants") or [])[1:]:
+        if not (isinstance(v.get("key"), str) and re.fullmatch(r"[a-z0-9][a-z0-9-]{0,39}", v["key"])):   # it goes into a selector
+            raise layout.LayoutError(f"look {v.get('key')!r}: a look's key is lowercase letters, digits and hyphens; nothing was built")
+        out.append((f'html[data-variant="{v["key"]}"]', {**base, **(v.get("vars") or {})}))
+    return out
+
+
 def card_links(scope, brand_rec, same=True):
     """Links and outlined buttons inside a card: kept as they are while the accent reads on the surface (filled buttons keep their
     own accent / on-accent pair either way), else they take the card's ink, links underlined."""
@@ -239,7 +258,8 @@ def look(brand_rec, bands_used=(), uses=()):
     if panels:   # site-kit#415: comic panels (Foo's family look): a 3px ink border, a hard offset shadow, square corners
         roles = [panels.get("shadow"), panels.get("tab", panels.get("shadow"))]
         if (panels.get("style") != "comic" or any(r not in brand_rec["colours"] or not ROLE.fullmatch(r) for r in roles)
-                or set(panels) - {"style", "shadow", "tab", "page", "hero", "family_links", "cta"} or panels.get("page", "comic") != "comic"
+                or set(panels) - {"style", "shadow", "tab", "page", "hero", "family_links", "cta", "cards", "prose"} or panels.get("page", "comic") != "comic"
+                or panels.get("cards", "surface") != "surface" or ("cards" in panels and "surface" not in brand_rec["colours"])
                 or panels.get("hero", "scene") != "scene" or panels.get("family_links", "ink") != "ink" or panels.get("cta", "compact") != "compact"
                 or ({"family_links", "cta"} & set(panels) and panels.get("page") != "comic")):
             raise layout.LayoutError('panels must be {"style": "comic", "shadow": a role of the brand\'s colours}')
@@ -255,6 +275,41 @@ def look(brand_rec, bands_used=(), uses=()):
                      ".services .wp-block-column{background:var(--st-ground)}"
                      ".wp-block-details,.wp-block-details:last-of-type{padding:0 1rem;margin:0 0 1rem}"
                      ".cta .wp-block-button__link{border-color:var(--st-on-accent)}")
+        if panels.get("cards") == "surface":   # Seth on key-site: the cards a shade darker than the page, and the FAQ's cards filled too,
+            # so no running text sits on the halftone dots. The cards keep the page's ink, so it must read on the surface.
+            c = brand_rec["colours"]
+            if contrast(c["ink"], c["surface"]) < 4.5:
+                raise layout.LayoutError(f'panels.cards "surface": the ink {c["ink"]} is {contrast(c["ink"], c["surface"]):.2f}:1 on the '
+                                         f'surface {c["surface"]}; a card\'s words need 4.5:1')
+            rules.append(".services .wp-block-column,.wp-block-details{background:var(--wp--preset--color--surface)}")
+        if panels.get("prose") == "surface":   # site-kit#562 (Seth on key-site#34): running text in a text or list section, or a doc, sits on
+            # a panel of the surface, the column's width, never on the halftone dots and never a page-wide card. A band keeps its own fill.
+            for scope, c in look_colours(brand_rec):
+                for role in ("ink", "heading"):
+                    if role in c and contrast(c[role], c["surface"]) < 4.5:
+                        raise layout.LayoutError(f'panels.prose "surface": in the {scope or "base"} look the {role} {c[role]} is '
+                                                 f'{contrast(c[role], c["surface"]):.2f}:1 on the surface {c["surface"]}; running text needs 4.5:1')
+            # The designer's live read of Key (site-kit#562): every panel and strip wears the cards' own frame and shadow, one
+            # family. A prose panel stops at the brand's measure (no empty strip beside the words), on the column's left edge;
+            # the work section and a plugin's slot keep the column, for their pictures and boards (site-kit#566). A strip is as wide as its words; a page's title is the largest.
+            edge = "margin:1.25rem 0 1.25rem max(1rem,calc((100% - var(--st-width)) / 2))"
+            pad = "clamp(1.25rem,3vw,2rem)"
+            measure = (brand_rec.get("body") or {}).get("measure")
+            cap = f"min(100% - 2rem,var(--st-width),calc({measure} + 2 * {pad} + 10px))" if measure else "min(100% - 2rem,var(--st-width))"
+            panel = f"background:var(--wp--preset--color--surface);{frame};box-shadow:6px 6px 0 {shadow};box-sizing:border-box;max-width:none"
+            rules.append(f"main :is(.text,.list,.doc,.docs-search-band).wp-block-group:not([class*=sk-band-]){{{panel};width:{cap};{edge};padding:{pad}}}"
+                         f"main :is(.work,.slot).wp-block-group:not([class*=sk-band-]){{{panel};width:min(100% - 2rem,var(--st-width));{edge};padding:{pad}}}"
+                         f"main :is(.services,.faq).wp-block-group:not([class*=sk-band-])>.wp-block-heading{{{panel};width:fit-content;padding:.35em .75em}}"
+                         f"main>.wp-block-post-title{{{panel};width:fit-content;max-width:min(100% - 2rem,var(--st-width));{edge};"
+                         "padding:.3em .75em;font-size:clamp(2.4rem,6vw,3.6rem)}"
+                         # the docs index's titles in the heading colour, as every other card's title (not the link's accent)
+                         ".docs-list h3 a{color:inherit}"
+                         # the footer's small print a step brighter on the dots
+                         "body>footer.wp-block-group .sk-footer-note{opacity:.95}")
+            for scope, c in look_colours(brand_rec):   # a link in a look whose accent can't carry words on the surface takes the ink
+                if "accent" in c and contrast(c["accent"], c["surface"]) < 4.5:
+                    rules.append(f"{scope + ' ' if scope else ''}main :is(.text,.list,.doc,.work) a:not(.wp-block-button__link){{color:var(--st-ink);"
+                                 "text-decoration:underline;text-decoration-color:var(--st-accent);text-decoration-thickness:2px;text-underline-offset:4px}")
         if panels.get("page") == "comic":   # site-kit#478: Foo's page around the panels (key-site#24, Foo's sister site)
             rules.append(
                 # the halftone ground: the ink's own dots over the ground, so it follows every look the visitor picks
@@ -289,7 +344,9 @@ def look(brand_rec, bands_used=(), uses=()):
                 "body>header .wp-block-navigation a.wp-block-navigation-item__content,header .variant-picker summary{padding:.3em .8em;"
                 f"font-family:var(--sk-font-display,inherit);letter-spacing:.03em;background:var(--st-ground);color:var(--st-ink);"
                 f"border:4px solid var(--st-ink);border-radius:10px;box-shadow:4px 4px 0 {shadow};text-decoration:none}}"
-                "header .wp-block-navigation .wp-block-navigation-item:last-child>a.wp-block-navigation-item__content"
+                # the pow button stays on the last real item when the menu ends with members' Sign in (designer on site-kit#601)
+                "header .wp-block-navigation .wp-block-navigation-item:last-child:not(.sk-nav-sign-in)>a.wp-block-navigation-item__content,"
+                "header .wp-block-navigation .wp-block-navigation-item:has(+.sk-nav-sign-in:last-child)>a.wp-block-navigation-item__content"
                 "{background:var(--st-accent);color:var(--st-on-accent)}"
                 # phones: the pills sit closer, so the menu and the picker share one row under the logo, as on Foo
                 "@media (max-width:479px){header .wp-block-navigation__container,header .wp-block-column:has(>[data-variant-picker])"
@@ -298,6 +355,22 @@ def look(brand_rec, bands_used=(), uses=()):
                 "body>header .wp-block-navigation a.wp-block-navigation-item__content[aria-current=\"page\"]"
                 "{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}"
                 f"header .variant-picker ul{{border:3px solid var(--st-ink);border-radius:10px;box-shadow:6px 6px 0 {shadow}}}"
+                # members' profile menu (site-kit#601, designer): its summary a pill like the menu's, its panel boxed like
+                # theme-picker's list; with Sign in in the menu, the menu's column takes the room the logo doesn't use, so
+                # five items stay on one row; on a phone the menu fills its row like every other item, the name shown;
+                # wider, the initials alone with even padding (stampwithshelly#21)
+                "header .sk-account>summary{box-sizing:border-box;min-height:48px;padding:.2em;"
+                f"font-family:var(--sk-font-display,inherit);letter-spacing:.03em;background:var(--st-ground);color:var(--st-ink);"
+                f"border:4px solid var(--st-ink);border-radius:10px;box-shadow:4px 4px 0 {shadow}}}"
+                "header .sk-account-avatar{width:1.9rem;height:1.9rem}"
+                f"header .sk-account-panel{{border-width:3px;border-radius:10px;box-shadow:6px 6px 0 {shadow}}}"
+                "@media (min-width:782px){header .wp-block-columns:has(.sk-nav-sign-in)>.wp-block-column:first-child"
+                "{flex:0 0 auto!important;flex-basis:auto!important}"
+                "header .wp-block-columns:has(.sk-nav-sign-in)>.wp-block-column:last-child{flex-grow:1}}"
+                "@media (max-width:479px){header .sk-account{display:block}"
+                "header .sk-account>summary{display:flex;width:100%;justify-content:center}"
+                "header .sk-account-name{position:static;width:auto;height:auto;clip:auto;overflow:visible;white-space:normal}"
+                "header .sk-account-panel{left:0;right:0;max-width:none}}"
                 # Foo's footer: on the page's own ground, left-aligned, the family line first, then the note, then the links
                 # (the site title is the header's, so it isn't repeated here)
                 "body>footer.wp-block-group{display:flex;flex-direction:column;align-items:flex-start;text-align:left;"
@@ -382,6 +455,15 @@ def look(brand_rec, bands_used=(), uses=()):
                      "{color:var(--wp--preset--color--muted,var(--st-muted));font-weight:400}"
                      "header .wp-block-navigation a.wp-block-navigation-item__content[aria-current=\"page\"],"
                      "main .wp-block-navigation a.wp-block-navigation-item__content[aria-current=\"page\"]{color:inherit}")   # the text's own colour (a band's too), the accent its mark (site-kit#370)
+    if header.get("nav_phone") == "spread":   # site-kit#533: on a phone the menu's items share the row, wrapping to more rows
+        # header and a hero's menu alike (a hero menu moves the nav into main, as nav_style's twin rules know; mi-dev-3)
+        rules.append("@media (max-width:479px){:is(header,main) .wp-block-navigation{width:100%}"
+                     ":is(header,main) .wp-block-navigation__container{display:flex;flex-wrap:wrap;width:100%}"
+                     # two to a row (four items are 2x2, three 2+1), each link filling its item; the link rule names the a, so it
+                     # outranks the comic page's .wp-block-navigation a.wp-block-navigation-item__content (dev on site-kit#537)
+                     ":is(header,main) .wp-block-navigation__container>.wp-block-navigation-item{flex:1 1 40%}"
+                     ":is(header,main) .wp-block-navigation a.wp-block-navigation-item__content{display:flex;width:100%;box-sizing:border-box;"
+                     "align-items:center;justify-content:center;min-height:44px;text-align:center}}")
     if header.get("nav_case") == "upper":
         rules.append(".wp-block-navigation a.wp-block-navigation-item__content{text-transform:uppercase}")
     if header.get("logo_size") == "large" and "image" not in header:   # a banner replaces the logo
@@ -433,10 +515,15 @@ def look(brand_rec, bands_used=(), uses=()):
     if headings.get("size") == "small":
         rules.append("h1.wp-block-heading,.wp-block-post-title{" + SCALE_DOWN["h1"] + "}h2.wp-block-heading{" + SCALE_DOWN["h2"]
                      + "}h3.wp-block-heading{" + SCALE_DOWN["h3"] + "}")
+    if headings.get("from_h3") == "text":   # site-kit#533: card titles and subheadings in the text face; h1 and h2 keep the display
+        rules.append("h3,h4,h5,h6{font-family:var(--sk-font-text,inherit)}")
     if headings.get("case") == "upper":
         rules.append(".wp-block-heading,.wp-block-post-title{text-transform:uppercase}")
     if brand_rec.get("text_align") == "center":
-        rules.append("main{text-align:center}main .wp-block-buttons{justify-content:center}.wp-block-quote{border-left:0;padding-left:0}")
+        rules.append("main{text-align:center}main .wp-block-buttons{justify-content:center}.wp-block-quote{border-left:0;padding-left:0}"
+                     # site-kit#636: a list is a centred block as wide as its words, its items left-aligned after their bullets
+                     # (centring each item left short ones far from their dots and wrapped lines under nothing)
+                     "main .list .wp-block-list{display:table;margin-inline:auto;text-align:left}main .list .wp-block-list li{margin-inline:0}")
     if "sk-layout-stacked" in uses:
         rules.append(".sk-layout-stacked .wp-block-columns{flex-direction:column;align-items:center;text-align:center}"
                      ".sk-layout-stacked .wp-block-column{flex:0 0 auto!important;flex-basis:auto!important;width:100%}"
@@ -449,11 +536,17 @@ def look(brand_rec, bands_used=(), uses=()):
                      ".hero .wp-block-columns img{display:block;width:100%;height:auto}"
                      # a phone shows the strip's first two panels, each tall enough to read as a panel (designer on #519)
                      "@media (max-width:479px){.hero img[src^=\"/img/hero/\"]{max-height:40vh;width:100%;object-fit:cover}"
-                     ".hero .wp-block-column>.wp-block-columns>.wp-block-column:nth-child(n+3){display:none}}")
+                     ".hero .wp-block-column>.wp-block-columns>.wp-block-column:nth-child(n+3){display:none}}"
+                     # site-kit#569 (designer on key-site#45): the art takes the wider column, so it and its strip read; the
+                     # panel is as tall as they need; on a phone it has no floor and a tighter gap, so the body starts on screen
+                     "@media (min-width:782px){.hero:has(img[src^=\"/img/hero/\"])>.wp-block-columns>.wp-block-column:first-child{flex:0 1 40%!important;max-width:none}"
+                     ".hero:has(img[src^=\"/img/hero/\"])>.wp-block-columns>.wp-block-column:last-child{flex:1 1 0%!important;min-width:0}}"
+                     ".hero:has(img[src^=\"/img/hero/\"]){min-height:clamp(360px,34vw,460px)}"
+                     "@media (max-width:639px){.hero:has(img[src^=\"/img/hero/\"]){min-height:0}.hero:has(img[src^=\"/img/hero/\"])>.wp-block-columns{gap:1rem}}")
     if "wp-element-caption" in uses:   # site-kit#519: the hero's caption, a box in ink on the ground (the pair the brand check holds
-        # at 4.5:1) that hangs from the art's lower edge, overlapping it by a little, so it never hides the picture's subject
+        # at 4.5:1) just under the art's frame, never across it (site-kit#554: half on the border read as a mistake)
         rules.append(".hero figure.wp-block-image{margin:0}"
-                     ".hero .wp-element-caption{position:relative;margin:-1rem .75rem 0;padding:.35em .7em;background:var(--st-ground);"
+                     ".hero .wp-element-caption{position:relative;margin:.5rem 0 0;padding:.35em .7em;background:var(--st-ground);"
                      "color:var(--st-ink);border:2px solid var(--st-ink);font-size:.95rem;line-height:1.3;overflow-wrap:anywhere}")
     if "sk-logo" in uses:
         rules.append(".sk-logo .wp-block-site-logo{margin-inline:auto}.sk-logo .wp-block-site-logo img{width:160px;height:160px}")
@@ -508,6 +601,10 @@ def look(brand_rec, bands_used=(), uses=()):
                      "font-size:1.25rem;font-weight:700;text-decoration:underline}")
         if "sk-style-link" in uses:   # a cta is an accent band: its link takes the band's own ink, never accent on accent (site-kit#391)
             rules.append(".cta.sk-style-link .wp-block-button__link{color:inherit}")
+    if "sk-hero-text" in uses and (brand_rec.get("panels") or {}).get("hero") != "scene" and (brand_rec.get("panels") or {}).get("prose") != "surface":   # site-kit#526: a text-only hero's own bottom padding is the gap to the words
+        # under it; the next section's top padding doubled it. A scene hero is a bordered panel with no bottom padding, so it keeps it.
+        # Neither side on a band: a band's edge needs its padding.
+        rules.append(".hero:not(:has(img),[class*=sk-band-])+:is(.text,.list):not([class*=sk-band-]){padding-top:0}")
     if {b for b in bands_used if b in ("light", "dark")}:   # blocks.css drops the top padding of a text/list/menu section that follows another
         rules.append(":is(.text,.list,.menu):is(.sk-band-light,.sk-band-dark){padding-top:2.5rem}")   # one; a band's edge needs its padding back
     bands = brand_rec.get("bands") or {}
@@ -577,6 +674,10 @@ def analytics_head(brand_rec):
     return tags
 
 
+# site-kit#526: the first thing a keyboard reaches on a static page, as WordPress's own themes have; hidden until it has focus.
+SKIP_LINK = '<a class="skip-link screen-reader-text" href="#main">Skip to content</a>\n'
+
+
 def document(record, path, brand_rec, origin, blocks, page_types, css=None, head_extra=(), header_size=None, image=None, family=None):
     """The whole static HTML document for one page of a valid record. `image`, a site path, is its og:image in place of the
     brand's share image (a post's featured image, site-kit#321). A post page declares its type on <body>."""
@@ -623,7 +724,8 @@ def document(record, path, brand_rec, origin, blocks, page_types, css=None, head
         head.append(f'<link rel="stylesheet" href="{e(css)}">')
     head += look(brand_rec, bands_used={s.get("band") for s in page["sections"]}, uses={c for c in USES if c in body} | ({("sk-footer-row" if record["footer"].get("layout") == "row" else "sk-footer-columns")} if record.get("footer") else set())
                         | ({"sk-footer-note"} if (record.get("footer") or {}).get("note") else set())
-                        | ({"sk-footer-family"} if (record.get("footer") or {}).get("family") else set()))
+                        | ({"sk-footer-family"} if (record.get("footer") or {}).get("family") else set())
+                        | ({"sk-hero-text"} if hero_then_text(page["sections"]) else set()))
     head += list(head_extra)   # the build's catalog links and JSON-LD blocks, already made safe for a <script>
     head += analytics_head(brand_rec)
     html = lambda markup: serialize.to_html(markup, site, path)   # noqa: E731
@@ -633,7 +735,7 @@ def document(record, path, brand_rec, origin, blocks, page_types, css=None, head
     if "<h1" not in main:   # a page with no hero shows its title, as WordPress's page template does with its post-title block
         main = f'<h1 class="wp-block-post-title">{e(page["title"])}</h1>\n' + main
     return ("<!doctype html>\n<html lang=\"en\">\n<head>\n" + "\n".join(head) + "\n</head>\n" + ('<body data-page-type="post">' if page["type"] == "post" else "<body>") + "\n"
-            + ("" if no_logo and no_menu else header_html(part("header"))) + "\n<main>\n" + main + "\n</main>\n" + html(part("footer")) + "\n</body>\n</html>\n")
+            + SKIP_LINK + ("" if no_logo and no_menu else header_html(part("header"))) + '\n<main id="main">\n' + main + "\n</main>\n" + html(part("footer")) + "\n</body>\n</html>\n")
 
 
 def main(argv=None):

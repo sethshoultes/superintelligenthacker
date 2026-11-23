@@ -51,8 +51,8 @@ CF_TOKEN = re.compile(r"[0-9a-f]{32}")        # a Cloudflare Web Analytics site 
 GA4_ID = re.compile(r"G-[A-Z0-9]{6,12}")      # a GA4 measurement id, not the numeric property id
 # The site's look (site-kit#243), config only: a closed set of header knobs, and a font's text held to plain names so it can sit
 # inside a <style>. Every key optional; a site that sets none builds exactly as it did.
-HEADER = {"image", "image_alt", "align", "nav_case", "logo_size", "in_card", "nav_align", "nav_current", "nav_home", "nav_style", "image_size", "title"}
-HEADINGS = {"case", "size"}
+HEADER = {"image", "image_alt", "align", "nav_case", "logo_size", "in_card", "nav_align", "nav_current", "nav_home", "nav_style", "image_size", "title", "nav_phone"}
+HEADINGS = {"case", "size", "from_h3"}
 BANDS = {"light", "dark", "card"}                     # section bands (site-kit#243 follow-up): {"ground": hex, "ink": hex} each
 HEADER_IMAGE_EXT = (".png", ".jpg", ".jpeg", ".webp")
 FONT_EXT = (".woff2", ".woff", ".ttf", ".otf")
@@ -122,6 +122,37 @@ def load(path):
     return rec
 
 
+def contrast(a, b):
+    """WCAG 2 contrast ratio of two #rgb or #rrggbb colours."""
+    def lum(h):
+        h = h.lstrip("#")
+        h = "".join(ch * 2 for ch in h) if len(h) == 3 else h
+        rgb = [int(h[i:i + 2], 16) / 255 for i in (0, 2, 4)]
+        r, g, b = (ch / 12.92 if ch <= 0.03928 else ((ch + 0.055) / 1.055) ** 2.4 for ch in rgb)
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b
+    hi, lo = sorted((lum(a), lum(b)), reverse=True)
+    return (hi + 0.05) / (lo + 0.05)
+
+
+MIN_CONTRAST = 4.5   # WCAG AA for body text: a filled button's words on its fill (site-kit#599)
+
+
+def pair_problems(colours, looks=None):
+    """site-kit#599: on-accent is the text on every accent-filled button (site-templates' buttons, the adventure's choices),
+    so the pair must read at 4.5:1, in the base colours and in each look that changes either."""
+    out, hexed = [], lambda v: isinstance(v, str) and HEX.fullmatch(v)
+    pairs = [("colours", colours.get("accent"), colours.get("on-accent"))]
+    for i, v in enumerate((looks or {}).get("variants", []) if isinstance(looks, dict) else []):
+        vs = v.get("vars") if isinstance(v, dict) else None
+        if isinstance(vs, dict) and ({"accent", "on-accent"} & set(vs)):
+            pairs.append((f"looks.variants[{i}]", vs.get("accent", colours.get("accent")), vs.get("on-accent", colours.get("on-accent"))))
+    for where, acc, on in pairs:
+        if hexed(acc) and hexed(on) and contrast(acc, on) < MIN_CONTRAST:
+            out.append(f"{where}: on-accent {on} on accent {acc} is {contrast(acc, on):.2f}:1; a filled button's text needs "
+                       f"{MIN_CONTRAST}:1 (pick a darker accent or another on-accent)")
+    return out
+
+
 def problems(rec, root):
     """Every problem with `rec`, files resolved against `root`; empty when the record is good."""
     root = pathlib.Path(root)
@@ -183,6 +214,7 @@ def problems(rec, root):
         else:
             out += [f"colours.{r}: {v!r} is not a #rgb or #rrggbb hex" for r, v in c.items()
                     if not (isinstance(v, str) and HEX.fullmatch(v))]
+            out += pair_problems(c, rec.get("looks"))
     for k in URLS:
         v = rec.get(k)
         if k in rec and v is not None and not (_text(v) and v.startswith("https://") and not one_line.search(v)):
@@ -275,6 +307,8 @@ def problems(rec, root):
                 out.append('header.nav_style must be "muted"')
             if "nav_home" in h and h["nav_home"] is not True:
                 out.append("header.nav_home must be true")
+            if "nav_phone" in h and h["nav_phone"] != "spread":   # site-kit#533
+                out.append('header.nav_phone must be "spread"')
             if "nav_align" in h and h["nav_align"] != "left":
                 out.append('header.nav_align must be "left"')
             elif "nav_align" in h and h.get("align") == "center":
@@ -298,6 +332,10 @@ def problems(rec, root):
                 out.append('headings.case must be "upper"')
             if "size" in hd and hd["size"] != "small":
                 out.append('headings.size must be "small"')
+            if "from_h3" in hd and hd["from_h3"] != "text":   # site-kit#533
+                out.append('headings.from_h3 must be "text"')
+            elif "from_h3" in hd and "text" not in (rec.get("fonts") or {}):
+                out.append('headings.from_h3 "text" needs fonts.text')
     if "main" in rec:
         if rec["main"] != "card":
             out.append('main must be "card"')
@@ -322,14 +360,15 @@ def problems(rec, root):
                     out.append(f"bands.{name}.font {v['font']!r} is not a role of the brand's fonts")
     if "panels" in rec:   # site-kit#415: comic panels, a closed set; the shadow is one of the brand's own colour roles
         pn = rec["panels"]   # site-kit#478: optionally Foo's whole page ("page": "comic") and Foo's hero ("hero": "scene")
-        if not (isinstance(pn, dict) and {"style", "shadow"} <= set(pn) <= {"style", "shadow", "tab", "page", "hero", "family_links", "cta"} and pn["style"] == "comic"
+        if not (isinstance(pn, dict) and {"style", "shadow"} <= set(pn) <= {"style", "shadow", "tab", "page", "hero", "family_links", "cta", "cards", "prose"} and pn["style"] == "comic"
                 and isinstance(rec.get("colours"), dict)
                 and all(isinstance(pn.get(k, pn["shadow"]), str) and pn.get(k, pn["shadow"]) in rec["colours"] for k in ("shadow", "tab"))
                 and pn.get("page", "comic") == "comic" and pn.get("hero", "scene") == "scene"
                 and pn.get("family_links", "ink") == "ink" and pn.get("cta", "compact") == "compact"
+                and all(pn.get(k, "surface") == "surface" and (k not in pn or "surface" in rec["colours"]) for k in ("cards", "prose"))
                 and (pn.get("page") == "comic" or not {"family_links", "cta"} & set(pn))):
             out.append('panels must be {"style": "comic", "shadow": a role of the brand\'s colours}, with "tab" (another role, '
-                       'the middle card\'s title strip), "page": "comic", "hero": "scene", "family_links": "ink" and "cta": "compact" (these two with "page") optional')
+                       'the middle card\'s title strip), "page": "comic", "hero": "scene", "family_links": "ink" and "cta": "compact" (these two with "page") and "cards": "surface" and "prose": "surface" (each needs colours.surface) optional')
     if "body" in rec:   # site-kit#517: running text's size and line length, for reading (Seth on Key's pages); absent writes nothing
         bd = rec["body"]
         if not (isinstance(bd, dict) and bd and set(bd) <= {"size", "measure"}
