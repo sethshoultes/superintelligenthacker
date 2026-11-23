@@ -1,0 +1,90 @@
+{
+  "name": "Super Intelligent Hacker",
+  "wordmark": {
+    "lead": "Super Intelligent",
+    "emphasis": "Hacker"
+  },
+  "icons": {
+    "16": "brand/icon-16.png",
+    "32": "brand/icon-32.png",
+    "180": "brand/icon-180.png",
+    "192": "brand/icon-192.png",
+    "512": "brand/icon-512.png",
+    "ico": "brand/favicon.ico"
+  },
+  "share_image": "brand/share.png",
+  "colours": {
+    "ink": "#FFF8E7",
+    "ground": "#16302B",
+    "accent": "#F2A93B",
+    "on-accent": "#1B1B2F",
+    "muted": "#C9C3B0",
+    "heading": "#FFF8E7",
+    "shadow": "#3E7C6B",
+    "surface": "#0F1F1C"
+  },
+  "bands": {
+    "dark": {
+      "ground": "#0F1F1C",
+      "ink": "#FFF8E7"
+    }
+  },
+  "header": {
+    "nav_style": "muted",
+    "nav_current": "bar",
+    "logo_size": "large",
+    "title": {
+      "style": "stacked",
+      "shadow": "shadow"
+    }
+  },
+  "support": {
+    "email": "hello@superintelligenthacker.com",
+    "url": "https://superintelligenthacker.com/what-it-checks/"
+  },
+  "analytics": {
+    "cloudflare": "00d59f2006304097b153944c5b29f1a1"
+  },
+  "fonts": {
+    "display": {
+      "family": "Bangers",
+      "fallback": "Impact, Arial Black, sans-serif",
+      "faces": [
+        {
+          "file": "fonts/bangers.woff2",
+          "weight": "400",
+          "style": "normal"
+        }
+      ]
+    },
+    "text": {
+      "family": "Comic Neue",
+      "fallback": "Trebuchet MS, sans-serif",
+      "faces": [
+        {
+          "file": "fonts/comic-neue-400.woff2",
+          "weight": "400",
+          "style": "normal"
+        },
+        {
+          "file": "fonts/comic-neue-700.woff2",
+          "weight": "700",
+          "style": "normal"
+        }
+      ]
+    }
+  },
+  "panels": {
+    "style": "comic",
+    "shadow": "ink",
+    "tab": "shadow",
+    "page": "comic",
+    "family_links": "ink",
+    "cta": "compact"
+  },
+  "main": "card",
+  "body": {
+    "size": "1.125rem",
+    "measure": "50ch"
+  }
+}
