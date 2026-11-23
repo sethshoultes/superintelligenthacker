@@ -266,6 +266,25 @@
           }
         },
         {
+          "id": "explainer-intro",
+          "block": "text@1",
+          "props": {
+            "heading": "The plan in under a minute",
+            "body": [
+              {
+                "paragraph": "A short film on what Hacker is being built to do. It is not open yet, so there is nothing to try today."
+              }
+            ]
+          }
+        },
+        {
+          "id": "explainer",
+          "block": "slot@1",
+          "props": {
+            "name": "explainer"
+          }
+        },
+        {
           "id": "steps",
           "block": "text@1",
           "props": {
@@ -510,5 +529,11 @@
   ],
   "content_signal": {
     "ai-train": "yes"
+  },
+  "slots": {
+    "explainer": {
+      "plugin": "official-embed",
+      "config": "plugins-config/explainer-video.json"
+    }
   }
 }
