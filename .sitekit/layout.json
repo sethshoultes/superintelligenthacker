@@ -535,5 +535,16 @@
       "plugin": "official-embed",
       "config": "plugins-config/explainer-video.json"
     }
-  }
+  },
+  "skills": [
+    {
+      "name": "what-hacker-checks",
+      "description": "Explain what Super Intelligent Hacker will check on a website, what it promises never to do, and that it isn't running yet.",
+      "path": "skills/what-hacker-checks/SKILL.md",
+      "queries": [
+        "Can Super Intelligent Hacker check my website?",
+        "Why is Super Intelligent Hacker in my site's visitor logs?"
+      ]
+    }
+  ]
 }
