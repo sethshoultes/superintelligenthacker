@@ -1,5 +1,6 @@
 {
   "site": "superintelligenthacker",
+  "committed_build": "python3 skills/site-templates/build.py .sitekit/layout.json .sitekit/brand.json --origin https://superintelligenthacker.com --out dist --publish --assets media --functions functions",
   "soul": "SOUL.md",
   "style_guide": "canon/STYLEGUIDE.md",
   "plugins_dir": "plugins",
